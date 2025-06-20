@@ -69,7 +69,7 @@ export default function GamePage() {
           {/* Logo com animação */}
           <div className="mb-8">
             <div className="inline-flex items-center space-x-2">
-              <div className="bg-yellow-400 text-black px-6 py-3 rounded-xl font-bold text-2xl shadow-lg animate-bounce">
+              <div className="bg-yellow-400 text-black px-6 py-3 rounded-xl font-bold text-2xl shadow-lg animate-bounce" style={{ transform: 'rotate(-5deg)' }}>
                 Jogaly
               </div>
               <span className="text-2xl font-bold text-white animate-pulse">GAMES</span>
@@ -138,7 +138,7 @@ export default function GamePage() {
 
             {/* Logo Central */}
             <div className="flex items-center space-x-3">
-              <div className="bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold text-4xl shadow-lg transform -rotate-3">
+              <div className="bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold text-4xl shadow-lg" style={{ transform: 'rotate(-5deg)' }}>
               Jogaly
               </div>
               <div className="text-5xl font-bold text-white">GAMES</div>

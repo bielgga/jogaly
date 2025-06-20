@@ -28,13 +28,15 @@ const GameSection = memo(({
   title, 
   emoji, 
   sectionId,
-  loading = false 
+  loading = false,
+  rotation = 0
 }: {
   games: GameListItem[]
   title: string
   emoji: string
   sectionId: string
   loading?: boolean
+  rotation?: number
 }) => {
   if (loading) {
     return (
@@ -59,7 +61,7 @@ const GameSection = memo(({
             <div className="w-full h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-50"></div>
           </div>
           <div className="relative flex justify-center">
-            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-2xl font-bold text-3xl shadow-2xl transform -rotate-1 hover:rotate-0 transition-transform duration-300">
+            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-2xl font-bold text-3xl shadow-2xl hover:rotate-0 transition-transform duration-300" style={{ transform: `rotate(${rotation}deg)` }}>
               <span className="mr-3">{emoji}</span>
               {title}
               <span className="ml-3">{emoji}</span>
@@ -245,7 +247,7 @@ export default function Home() {
         {/* Logo com animação */}
         <div className="mb-8">
           <div className="inline-flex items-center space-x-3">
-            <div className="bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold text-4xl shadow-lg transform -rotate-2 animate-bounce">
+            <div className="bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold text-4xl shadow-lg animate-bounce" style={{ transform: 'rotate(-5deg)' }}>
               Jogaly
             </div>
             <span className="text-5xl font-bold text-white animate-pulse">GAMES</span>
@@ -357,7 +359,7 @@ export default function Home() {
                   <div className="w-full h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-50"></div>
                 </div>
                 <div className="relative flex justify-center">
-                  <h2 id="popular-games-heading" className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-2xl font-bold text-3xl shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-300">
+                  <h2 id="popular-games-heading" className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-2xl font-bold text-3xl shadow-2xl hover:rotate-0 transition-transform duration-300">
                     <span className="mr-3">🔥</span>
                     Jogos Mais Populares
                     <span className="ml-3">🔥</span>
@@ -492,6 +494,7 @@ export default function Home() {
           emoji="⭐"
           sectionId="page3"
           loading={sectionsLoading.page3}
+          rotation={-2}
         />
 
         <GameSection
@@ -500,6 +503,7 @@ export default function Home() {
           emoji="🎯"
           sectionId="shooting"
           loading={sectionsLoading.shooting}
+          rotation={2}
         />
 
         <GameSection
@@ -508,6 +512,7 @@ export default function Home() {
           emoji="🏎️"
           sectionId="racing"
           loading={sectionsLoading.racing}
+          rotation={-2}
         />
 
         <GameSection
@@ -516,6 +521,7 @@ export default function Home() {
           emoji="🧩"
           sectionId="puzzle"
           loading={sectionsLoading.puzzle}
+          rotation={2}
         />
 
         <GameSection
