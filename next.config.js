@@ -10,50 +10,57 @@ const nextConfig = {
     dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  // Otimizações para reduzir JavaScript não utilizado
+  // Configurar target moderno para evitar polyfills desnecessários
+  swcMinify: true,
+  poweredByHeader: false,
+  // Configurações experimentais para otimização
   experimental: {
     optimizePackageImports: ['@supabase/supabase-js'],
     serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
-  // Configurações de compilação para melhor tree shaking
+  // Configurações do compilador para produção otimizada
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
-    // Remover imports não utilizados
     reactRemoveProperties: process.env.NODE_ENV === 'production',
   },
-  // Configurações de webpack para otimizações
+  // Configurações de webpack otimizadas
   webpack: (config, { isServer, dev }) => {
     if (!isServer && !dev) {
-      // Otimizações para reduzir bundle size em produção
+      // Configurar browserslist para navegadores modernos
+      config.target = ['web', 'es2017']
+      
+      // Otimizações avançadas de bundle
       config.optimization = {
         ...config.optimization,
         splitChunks: {
           chunks: 'all',
           maxInitialRequests: 25,
           maxAsyncRequests: 20,
+          minSize: 20000,
+          maxSize: 244000,
           cacheGroups: {
-            // Separar vendors principais
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-              priority: 10,
-              enforce: true,
-            },
-            // Separar React/React-DOM
-            react: {
+            // Framework separado (React/React-DOM)
+            framework: {
               test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-              name: 'react',
+              name: 'framework',
               chunks: 'all',
-              priority: 20,
+              priority: 40,
               enforce: true,
             },
-            // Separar Supabase
+            // Supabase separado
             supabase: {
               test: /[\\/]node_modules[\\/]@supabase[\\/]/,
               name: 'supabase',
               chunks: 'all',
-              priority: 15,
+              priority: 30,
+              enforce: true,
+            },
+            // Vendors (outras bibliotecas)
+            vendors: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+              priority: 20,
               enforce: true,
             },
             // Código comum da aplicação
@@ -61,18 +68,31 @@ const nextConfig = {
               name: 'common',
               minChunks: 2,
               chunks: 'all',
-              priority: 5,
+              priority: 10,
               reuseExistingChunk: true,
               enforce: true,
             },
           },
         },
-        // Otimizações adicionais
+        // Tree shaking mais agressivo
         usedExports: true,
         sideEffects: false,
+        // Minimização otimizada
+        minimize: true,
       }
 
-      // Adicionar plugin para analisar bundle
+      // Resolver apenas o que é necessário
+      config.resolve = {
+        ...config.resolve,
+        fallback: {
+          ...config.resolve.fallback,
+          fs: false,
+          net: false,
+          tls: false,
+        },
+      }
+
+      // Plugin para análise de bundle se necessário
       if (process.env.ANALYZE === 'true') {
         const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
         config.plugins.push(
@@ -84,18 +104,9 @@ const nextConfig = {
       }
     }
 
-    // Otimizações de resolução de módulos
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      // Remover alias problemáticos - deixar o Next.js gerenciar
-    }
-
     return config
   },
-  // Configurações de produção
-  swcMinify: true,
-  poweredByHeader: false,
-  // Otimizações de output
+  // Output otimizado
   output: 'standalone',
   // Configurações de performance
   onDemandEntries: {

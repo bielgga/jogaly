@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:analyze": "ANALYZE=true next build",
+    "build:analyze": "set ANALYZE=true && next build",
+    "build:optimized": "set NODE_ENV=production && set NEXT_TELEMETRY_DISABLED=1 && next build",
     "start": "next start",
     "lint": "next lint",
     "populate-db": "npx tsx src/scripts/populate-db.ts"

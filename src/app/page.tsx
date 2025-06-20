@@ -1,13 +1,26 @@
 'use client'
 
 import { useState, useEffect, lazy, Suspense, useMemo, useCallback, memo } from 'react'
+import dynamic from 'next/dynamic'
 import { gameService, GameListItem } from '@/lib/supabase'
 import GameCard from '@/components/GameCard'
 import Header from '@/components/Header'
-import SectionSkeleton from '@/components/SectionSkeleton'
 
-// Lazy load do Footer para reduzir bundle inicial
+// Lazy loading otimizado com preload estratégico
 const Footer = lazy(() => import('@/components/Footer'))
+const SectionSkeleton = dynamic(() => import('@/components/SectionSkeleton'), {
+  ssr: false,
+  loading: () => (
+    <div className="mt-16 animate-pulse">
+      <div className="h-20 bg-gray-300 rounded-2xl mb-12 mx-auto max-w-md"></div>
+      <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-3">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="aspect-square bg-gray-300 rounded-2xl"></div>
+        ))}
+      </div>
+    </div>
+  )
+})
 
 // Componente memoizado para seções de jogos
 const GameSection = memo(({ 
@@ -15,14 +28,12 @@ const GameSection = memo(({
   title, 
   emoji, 
   sectionId,
-  gridType = 'uniform',
   loading = false 
 }: {
   games: GameListItem[]
   title: string
   emoji: string
   sectionId: string
-  gridType?: 'uniform' | 'masonry' | 'simple'
   loading?: boolean
 }) => {
   if (loading) {
@@ -119,67 +130,57 @@ export default function Home() {
     return games.sort((a, b) => b.likes - a.likes)
   }, [games])
 
-  // Callback memoizado para carregar seções
+  // Callback memoizado para carregar seções com otimização de performance
   const loadSections = useCallback(async () => {
     try {
-      const [
-        popularGamesData,
-        page3GamesData,
-        cookingGamesData,
-        shootingGamesData,
-        racingGamesData,
-        puzzleGamesData
-      ] = await Promise.all([
-        gameService.getGamesByPage(2),
-        gameService.getGamesByPage(3),
-        gameService.getGamesByPage(4),
-        gameService.getGamesByPage(5),
-        gameService.getGamesByPage(6),
-        gameService.getGamesByPage(7)
-      ])
-
-      // Usar requestAnimationFrame para operações de DOM não críticas
-      const updateSections = () => {
-        // Atualizar seções de forma escalonada para reduzir blocking
-        setPopularGames(popularGamesData.sort((a, b) => b.likes - a.likes))
-        setSectionsLoading(prev => ({ ...prev, popular: false }))
+      // Carregar seções em batches para reduzir blocking
+      const loadBatch1 = async () => {
+        const [popularGamesData, page3GamesData] = await Promise.all([
+          gameService.getGamesByPage(2),
+          gameService.getGamesByPage(3),
+        ])
         
-        requestAnimationFrame(() => {
-          setPage3Games(page3GamesData.sort((a, b) => b.likes - a.likes))
-          setSectionsLoading(prev => ({ ...prev, page3: false }))
-          
-          requestAnimationFrame(() => {
-            setShootingGames(shootingGamesData.sort((a, b) => b.likes - a.likes))
-            setSectionsLoading(prev => ({ ...prev, shooting: false }))
-            
-            requestAnimationFrame(() => {
-              setRacingGames(racingGamesData.sort((a, b) => b.likes - a.likes))
-              setSectionsLoading(prev => ({ ...prev, racing: false }))
-              
-              requestAnimationFrame(() => {
-                setPuzzleGames(puzzleGamesData.sort((a, b) => b.likes - a.likes))
-                setSectionsLoading(prev => ({ ...prev, puzzle: false }))
-                
-                requestAnimationFrame(() => {
-                  setCookingGames(cookingGamesData.sort((a, b) => b.likes - a.likes))
-                  setSectionsLoading(prev => ({ ...prev, cooking: false }))
-                })
-              })
-            })
-          })
-        })
+        setPopularGames(popularGamesData.sort((a, b) => b.likes - a.likes))
+        setPage3Games(page3GamesData.sort((a, b) => b.likes - a.likes))
+        setSectionsLoading(prev => ({ ...prev, popular: false, page3: false }))
       }
 
-      // Usar requestIdleCallback se disponível, senão requestAnimationFrame
+      const loadBatch2 = async () => {
+        const [shootingGamesData, racingGamesData] = await Promise.all([
+          gameService.getGamesByPage(5),
+          gameService.getGamesByPage(6),
+        ])
+        
+        setShootingGames(shootingGamesData.sort((a, b) => b.likes - a.likes))
+        setRacingGames(racingGamesData.sort((a, b) => b.likes - a.likes))
+        setSectionsLoading(prev => ({ ...prev, shooting: false, racing: false }))
+      }
+
+      const loadBatch3 = async () => {
+        const [cookingGamesData, puzzleGamesData] = await Promise.all([
+          gameService.getGamesByPage(4),
+          gameService.getGamesByPage(7),
+        ])
+        
+        setCookingGames(cookingGamesData.sort((a, b) => b.likes - a.likes))
+        setPuzzleGames(puzzleGamesData.sort((a, b) => b.likes - a.likes))
+        setSectionsLoading(prev => ({ ...prev, cooking: false, puzzle: false }))
+      }
+
+      // Executar batches com delays para otimizar performance
+      await loadBatch1()
+      
+      // Usar requestIdleCallback para as próximas seções
       if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        window.requestIdleCallback(updateSections, { timeout: 5000 })
+        window.requestIdleCallback(() => loadBatch2(), { timeout: 3000 })
+        window.requestIdleCallback(() => loadBatch3(), { timeout: 5000 })
       } else {
-        requestAnimationFrame(updateSections)
+        setTimeout(loadBatch2, 100)
+        setTimeout(loadBatch3, 200)
       }
       
     } catch (err) {
       console.error('Erro ao carregar seções adicionais:', err)
-      // Em caso de erro, remover os skeletons
       setSectionsLoading({
         popular: false,
         page3: false,

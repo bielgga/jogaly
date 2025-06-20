@@ -1,0 +1,19 @@
+# Browsers que suportamos - apenas navegadores modernos para reduzir polyfills
+# Isso reduzirá significativamente o JavaScript não utilizado
+
+# Chrome/Chromium
+> 0.5%
+last 2 versions
+not dead
+
+# Especificamente navegadores modernos que suportam ES2017+
+Chrome >= 60
+Firefox >= 60
+Safari >= 12
+Edge >= 79
+
+# Remover suporte para navegadores muito antigos
+not IE 11
+not Chrome < 60
+not Firefox < 60
+not Safari < 12 

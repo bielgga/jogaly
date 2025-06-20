@@ -13,16 +13,21 @@ if (!supabaseAnonKey) {
   throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY não encontrada no arquivo .env.local')
 }
 
-// Cliente Supabase otimizado
+// Cliente Supabase otimizado para jogos públicos
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: false, // Não precisamos de sessão persistente para jogos públicos
+    persistSession: false, // Não precisamos de sessão persistente
     autoRefreshToken: false, // Não precisamos de refresh automático
+    detectSessionInUrl: false, // Não detectar sessão na URL
+    storage: undefined, // Não usar storage local
   },
   global: {
     headers: {
       'x-application-name': 'jogaly-games',
     },
+  },
+  db: {
+    schema: 'public',
   },
 })
 
@@ -55,20 +60,28 @@ export interface GameListItem {
   category?: string
 }
 
-// Cache simples para reduzir requisições desnecessárias
+// Cache otimizado com Map para melhor performance
 const cache = new Map<string, { data: GameListItem[], timestamp: number }>()
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
 
-// Função utilitária para cache
+// Funções utilitárias para cache otimizadas
 function getCachedData(key: string): GameListItem[] | null {
   const cached = cache.get(key)
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
     return cached.data
   }
+  cache.delete(key) // Limpar cache expirado
   return null
 }
 
 function setCachedData(key: string, data: GameListItem[]): void {
+  // Limitar tamanho do cache
+  if (cache.size > 20) {
+    const firstKey = cache.keys().next().value
+    if (firstKey) {
+      cache.delete(firstKey)
+    }
+  }
   cache.set(key, { data, timestamp: Date.now() })
 }
 
@@ -118,7 +131,7 @@ export const gameService = {
     return games
   },
 
-  // Buscar jogo por ID (dados completos)
+  // Buscar jogo por ID (dados completos) - sem cache para dados dinâmicos
   async getGameById(id: string): Promise<Game | null> {
     const { data, error } = await supabase
       .from('games')
@@ -136,6 +149,10 @@ export const gameService = {
 
   // Buscar jogos por categoria (apenas página 1)
   async getGamesByCategory(category: string): Promise<GameListItem[]> {
+    const cacheKey = `games_category_${category}`
+    const cached = getCachedData(cacheKey)
+    if (cached) return cached
+
     const { data, error } = await supabase
       .from('games')
       .select('id,title,thumb,likes,views,category')
@@ -148,7 +165,9 @@ export const gameService = {
       throw error
     }
     
-    return (data || []) as GameListItem[]
+    const games = (data || []) as GameListItem[]
+    setCachedData(cacheKey, games)
+    return games
   },
 
   // Buscar jogos relacionados (5 mais visualizados da página 1, excluindo o jogo atual)
@@ -171,12 +190,15 @@ export const gameService = {
 
   // Pesquisar jogos por título (apenas página 1)
   async searchGames(query: string): Promise<GameListItem[]> {
+    if (!query.trim()) return []
+    
     const { data, error } = await supabase
       .from('games')
       .select('id,title,thumb,likes,views')
       .ilike('title', `%${query}%`)
       .eq('page', 1)
       .order('created_at', { ascending: false })
+      .limit(20) // Limitar resultados
     
     if (error) {
       console.error('Erro ao pesquisar jogos:', error)
@@ -214,8 +236,12 @@ export const gameService = {
     }
   },
 
-  // Buscar jogos mais visualizados (apenas página 1)
+  // Buscar jogos mais visualizados (com cache)
   async getMostViewedGames(limit: number = 10): Promise<GameListItem[]> {
+    const cacheKey = `most_viewed_${limit}`
+    const cached = getCachedData(cacheKey)
+    if (cached) return cached
+
     const { data, error } = await supabase
       .from('games')
       .select('id,title,thumb,likes,views')
@@ -228,6 +254,8 @@ export const gameService = {
       return []
     }
     
-    return (data || []) as GameListItem[]
-  }
+    const games = (data || []) as GameListItem[]
+    setCachedData(cacheKey, games)
+    return games
+  },
 } 
