@@ -1,9 +1,12 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, lazy, Suspense } from 'react'
 import { gameService, Game } from '@/lib/supabase'
 import Footer from '@/components/Footer'
+
+// Lazy load do componente de jogos relacionados
+const RelatedGames = lazy(() => import('./RelatedGames'))
 
 export default function GamePage() {
   const params = useParams()
@@ -42,9 +45,11 @@ export default function GamePage() {
           console.log('⏭️ Visualização já incrementada para jogo:', gameId)
         }
         
-        // Carregar jogos relacionados (10 mais visualizados)
-        const related = await gameService.getRelatedGames(gameId, gameData.category, 10)
-        setRelatedGames(related)
+        // Carregar jogos relacionados de forma assíncrona (não bloquear a renderização)
+        setTimeout(async () => {
+          const related = await gameService.getRelatedGames(gameId, gameData.category, 10)
+          setRelatedGames(related)
+        }, 100)
         
       } catch (err) {
         console.error('Erro ao carregar jogo:', err)
@@ -103,23 +108,44 @@ export default function GamePage() {
 
   return (
     <div className="min-h-screen">
+      {/* Header simplificado inline */}
       <header className="py-6">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <button
-                onClick={() => router.push('/')}
-                className="bg-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-colors flex items-center space-x-2"
+            {/* Botão Home - Ícone de casinha */}
+            <button
+              onClick={() => router.push('/')}
+              className="bg-white/20 backdrop-blur-sm text-white p-3 rounded-xl hover:bg-white/30 transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg"
+              title="Voltar para Home"
+            >
+              <svg 
+                width="24" 
+                height="24" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-6 h-6"
               >
-                <span>← Voltar</span>
-              </button>
-              
+                <path 
+                  d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9.55228 21 10 20.5523 10 20V16C10 15.4477 10.4477 15 11 15H13C13.5523 15 14 15.4477 14 16V20C14 20.5523 14.4477 21 15 21M9 21H15" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            {/* Logo Central */}
+            <div className="flex items-center space-x-3">
               <div className="bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold text-4xl shadow-lg transform -rotate-3">
               Jogaly
               </div>
-              
               <h1 className="text-5xl font-bold text-white">GAMES</h1>
             </div>
+
+            {/* Espaço vazio para equilibrar o layout */}
+            <div className="w-12"></div>
           </div>
         </div>
       </header>
@@ -170,53 +196,27 @@ export default function GamePage() {
                   className="absolute top-0 left-0 w-full h-full border-0"
                   title={game.title}
                   allowFullScreen
+                  loading="lazy"
                 />
               </div>
             </div>
 
-            {/* Jogos Mais Jogados */}
-            {relatedGames.length > 0 && (
-            <div className="mt-8">
+            {/* Jogos Relacionados com Lazy Loading */}
+            <Suspense fallback={
+              <div className="mt-8">
                 <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
                   <span className="mr-3">🔥</span>
                   Jogos Mais Jogados
                 </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                  {relatedGames.map((relatedGame) => (
-                    <a
-                      key={relatedGame.id}
-                      href={`/game/${relatedGame.id}`}
-                      className="group relative aspect-square rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 overflow-hidden border-[3px] border-white/25"
-                    >
-                      <img
-                        src={relatedGame.thumb}
-                        alt={relatedGame.title}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                      
-                      {/* Visualizações no jogo mais jogado */}
-                      <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1">
-                        <span className="text-blue-400">👁️</span>
-                        <span>
-                          {relatedGame.views >= 1000000 
-                            ? `${(relatedGame.views / 1000000).toFixed(1)}M` 
-                            : relatedGame.views >= 1000 
-                            ? `${(relatedGame.views / 1000).toFixed(1)}k` 
-                            : relatedGame.views}
-                        </span>
-                      </div>
-                      
-                      <div className="absolute bottom-0 left-0 right-0 p-3">
-                        <h3 className="text-white text-sm font-bold leading-tight line-clamp-2">
-                          {relatedGame.title}
-                        </h3>
-                      </div>
-                    </a>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="aspect-square bg-gray-300 animate-pulse rounded-2xl"></div>
                   ))}
+                </div>
               </div>
-            </div>
-            )}
+            }>
+              <RelatedGames games={relatedGames} />
+            </Suspense>
           </div>
 
           {/* Informações do jogo - Direita (1 coluna) */}
@@ -238,8 +238,6 @@ export default function GamePage() {
               </h2>
               <p className="text-gray-700 leading-relaxed">{game.instructions}</p>
             </div>
-
-
           </div>
         </div>
       </main>

@@ -1,99 +1,137 @@
-# 🎮 Friv Games - Site de Jogos Online
+# 🎮 Jogaly Games
 
-Um site moderno estilo Jogaly para jogos online, desenvolvido com Next.js, TypeScript, Tailwind CSS e Supabase.
+Uma plataforma moderna de jogos online construída com Next.js, TypeScript e Supabase. O Jogaly oferece uma experiência de jogo fluida e interativa com uma ampla variedade de jogos organizados por categorias.
 
-## 🚀 Tecnologias Utilizadas
+## ✨ Características
 
-- **Next.js 14** - Framework React
-- **TypeScript** - Tipagem estática
-- **Tailwind CSS** - Estilização
-- **Supabase** - Banco de dados e backend
-- **Lucide React** - Ícones
+- 🎯 **Interface Moderna**: Design responsivo e intuitivo
+- 🎮 **Múltiplas Categorias**: Jogos organizados por tipo (Ação, Corrida, Quebra-cabeça, Cozinha, etc.)
+- 📱 **Totalmente Responsivo**: Funciona perfeitamente em desktop, tablet e mobile
+- ⚡ **Performance Otimizada**: Carregamento rápido com Next.js 14
+- 💾 **Banco de Dados Robusto**: Supabase para armazenamento e gerenciamento de dados
+- ❤️ **Sistema de Curtidas**: Os usuários podem curtir seus jogos favoritos
+- 👀 **Contador de Visualizações**: Acompanhamento de popularidade dos jogos
+- 🔍 **Busca Inteligente**: Encontre jogos facilmente
+- 📊 **Páginas Temáticas**: Jogos organizados em diferentes seções
 
-## 📋 Pré-requisitos
+## 🛠️ Tecnologias Utilizadas
 
-- Node.js 18+ instalado
+- **Frontend**: Next.js 14, React 18, TypeScript
+- **Estilização**: Tailwind CSS
+- **Banco de Dados**: Supabase
+- **Ícones**: Lucide React
+- **Hospedagem**: Vercel (recomendado)
+
+## 📦 Pré-requisitos
+
+- Node.js 18+ 
+- npm ou yarn
 - Conta no Supabase
 
-## 🛠️ Instalação
 
-1. **Clone o repositório ou use os arquivos criados**
+### Tabela `games`
 
-2. **Instale as dependências:**
-   ```bash
-   npm install
-   ```
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | varchar | Identificador único do jogo (slug) |
+| `title` | varchar | Título do jogo |
+| `description` | text | Descrição detalhada |
+| `instructions` | text | Instruções de como jogar |
+| `url` | varchar | URL do jogo |
+| `category` | varchar | Categoria do jogo |
+| `tags` | varchar | Tags relacionadas |
+| `thumb` | varchar | URL da thumbnail |
+| `width` | varchar | Largura do iframe |
+| `height` | varchar | Altura do iframe |
+| `views` | integer | Número de visualizações |
+| `likes` | integer | Número de curtidas |
+| `page` | integer | Página onde o jogo aparece |
+| `created_at` | timestamp | Data de criação |
 
-3. **Configure o banco de dados Supabase:**
-   
-   Acesse seu projeto no [Supabase](https://supabase.com) e execute o seguinte SQL no editor:
-   
-   ```sql
-   CREATE TABLE games (
-     id TEXT PRIMARY KEY,
-     title TEXT NOT NULL,
-     description TEXT,
-     instructions TEXT,
-     url TEXT NOT NULL,
-     category TEXT,
-     tags TEXT,
-     thumb TEXT,
-     width TEXT,
-     height TEXT,
-     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-   );
-   ```
+### Funções do Banco
 
-4. **Configure as variáveis de ambiente:**
-   
-   Crie um arquivo `.env.local` na raiz do projeto:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=https://trqrdrpbptpdfdyosqhw.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRycXJkcnBicHRwZGZkeW9zcWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMDcwODksImV4cCI6MjA2NTg4MzA4OX0.aVrm5hC1tv_Of73gA6f3lzUUfefP_VRJaISSJ9zfccc
-   ```
+- `increment_game_views(game_id)`: Incrementa visualizações
+- `increment_game_likes(game_id)`: Incrementa curtidas
 
-5. **Execute o projeto:**
-   ```bash
-   npm run dev
-   ```
+## 📱 Estrutura de Páginas
 
-6. **Acesse o site:**
-   Abra [http://localhost:3000](http://localhost:3000) no seu navegador
+- **Página 1**: Jogos principais
+- **Página 2**: Jogos mais populares 🔥
+- **Página 3**: Escolhas do Jogaly ⭐
+- **Página 4**: Jogos de cozinhar 👨‍🍳
+- **Página 5**: Jogos de tiroteiro 🔫
+- **Página 6**: Jogos de corrida 🏁
+- **Página 7**: Jogos de quebra-cabeça 🧩
 
-## 🎮 Funcionalidades
 
-- ✅ **Grid responsivo de jogos** - Layout adaptável para diferentes telas
-- ✅ **Busca em tempo real** - Pesquise jogos por título, descrição ou tags
-- ✅ **Filtros por categoria** - Organize jogos por categoria
-- ✅ **Modal de jogo** - Jogue diretamente no site em tela cheia
-- ✅ **Design moderno** - Interface inspirada no Friv com cores vibrantes
-- ✅ **Animações suaves** - Hover effects e transições
-- ✅ **Otimizado para mobile** - Funciona perfeitamente em dispositivos móveis
+```bash
+# Desenvolvimento
+npm run dev
 
-## 🎨 Design
+# Build para produção
+npm run build
 
-O design segue o estilo clássico do Friv com:
-- Gradiente roxo/azul/verde como fundo
-- Cards brancos com bordas arredondadas
-- Hover effects com escala e sombras
-- Tipografia Fredoka para um visual divertido
-- Layout em grid responsivo
+# Iniciar em produção
+npm run start
 
-## 📱 Responsividade
+# Linting
+npm run lint
 
-- **Mobile:** 2 colunas
-- **Tablet:** 3-4 colunas  
-- **Desktop:** 5-6 colunas
-- **Desktop grande:** 8 colunas
 
-## 🔧 Personalização
+## 📁 Estrutura do Projeto
 
-Para adicionar mais jogos, edite o arquivo `src/app/page.tsx` e adicione novos objetos ao array `gamesData`, ou configure o Supabase para gerenciar os jogos dinamicamente.
+```
+src/
+├── app/
+│   ├── game/[id]/          # Páginas individuais dos jogos
+│   ├── globals.css         # Estilos globais
+│   ├── layout.tsx          # Layout principal
+│   └── page.tsx            # Página inicial
+├── components/
+│   ├── Footer.tsx          # Rodapé
+│   ├── GameCard.tsx        # Card do jogo
+│   └── Header.tsx          # Cabeçalho
+├── lib/
+    └── supabase.ts         # Configuração e serviços do Supabase
 
-## 📄 Licença
+```
 
-Este projeto é livre para uso pessoal e educacional.
+## 🔧 Configuração do Supabase
 
----
+1. Crie um novo projeto no [Supabase](https://supabase.com)
+2. Execute as migrations na pasta `migrations/` em ordem
+3. Configure as políticas RLS se necessário
+4. Adicione as URLs e chaves no `.env.local`
 
-Desenvolvido com ❤️ usando tecnologias modernas 
+## 🚀 Deploy
+
+### Vercel (Recomendado)
+
+1. Conecte seu repositório ao Vercel
+2. Configure as variáveis de ambiente
+3. Deploy automático a cada push
+
+### Outras Plataformas
+
+O projeto é compatível com qualquer plataforma que suporte Next.js:
+- Netlify
+- Railway
+- DigitalOcean App Platform
+
+## 🤝 Contribuindo
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📝 Adicionando Novos Jogos
+
+Para adicionar novos jogos, crie uma nova migration seguindo o padrão:
+
+```sql
+-- migrations/XXX_add_new_games.sql
+INSERT INTO games (id, title, description, instructions, url, category, tags, thumb, width, height, views, likes, page) VALUES
+('novo-jogo', 'Novo Jogo', 'Descrição...', 'Instruções...', 'https://...', 'acao', 'tag1,tag2', 'thumb.jpg', '800', '600', 0, 0, 1);
+

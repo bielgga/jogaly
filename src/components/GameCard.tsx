@@ -6,9 +6,10 @@ import { Game } from '@/lib/supabase'
 
 interface GameCardProps {
   game: Game
+  priority?: boolean
 }
 
-export default function GameCard({ game }: GameCardProps) {
+export default function GameCard({ game, priority = false }: GameCardProps) {
   return (
     <Link href={`/game/${game.id}`} className="block h-full w-full">
       <div 
@@ -20,6 +21,7 @@ export default function GameCard({ game }: GameCardProps) {
           src={game.thumb}
           alt={game.title}
           fill
+          priority={priority}
           className="object-cover group-hover:scale-110 transition-transform duration-300"
           sizes="(max-width: 640px) 50vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 14vw"
         />

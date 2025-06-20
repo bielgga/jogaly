@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { gameService, Game } from '@/lib/supabase'
 import GameCard from '@/components/GameCard'
 import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+
+// Lazy load do Footer para reduzir bundle inicial
+const Footer = lazy(() => import('@/components/Footer'))
 
 export default function Home() {
   const [games, setGames] = useState<Game[]>([])
@@ -24,42 +26,41 @@ export default function Home() {
       setError(null)
       
       try {
-        // Carregar jogos da página 1
+        // Carregar jogos da página 1 primeiro (crítico)
         const gamesData = await gameService.getAllGames()
-        // Ordenar jogos por curtidas (do mais curtido para o menos curtido)
         const sortedGames = gamesData.sort((a, b) => b.likes - a.likes)
         setGames(sortedGames)
         setFilteredGames(sortedGames)
         
-        // Carregar jogos da página 2 (Jogos Mais Populares)
-        const popularGamesData = await gameService.getGamesByPage(2)
-        const sortedPopularGames = popularGamesData.sort((a, b) => b.likes - a.likes)
-        setPopularGames(sortedPopularGames)
-        
-        // Carregar jogos da página 3 (Escolhas do Jogaly)
-        const page3GamesData = await gameService.getGamesByPage(3)
-        const sortedPage3Games = page3GamesData.sort((a, b) => b.likes - a.likes)
-        setPage3Games(sortedPage3Games)
-        
-        // Carregar jogos da página 4 (Jogos de Cozinhar)
-        const cookingGamesData = await gameService.getGamesByPage(4)
-        const sortedCookingGames = cookingGamesData.sort((a, b) => b.likes - a.likes)
-        setCookingGames(sortedCookingGames)
-        
-        // Carregar jogos da página 5 (Jogos de Tiroteiro)
-        const shootingGamesData = await gameService.getGamesByPage(5)
-        const sortedShootingGames = shootingGamesData.sort((a, b) => b.likes - a.likes)
-        setShootingGames(sortedShootingGames)
-        
-        // Carregar jogos da página 6 (Jogos de Corrida)
-        const racingGamesData = await gameService.getGamesByPage(6)
-        const sortedRacingGames = racingGamesData.sort((a, b) => b.likes - a.likes)
-        setRacingGames(sortedRacingGames)
-        
-        // Carregar jogos da página 7 (Jogos de Quebra-cabeça)
-        const puzzleGamesData = await gameService.getGamesByPage(7)
-        const sortedPuzzleGames = puzzleGamesData.sort((a, b) => b.likes - a.likes)
-        setPuzzleGames(sortedPuzzleGames)
+        // Carregar outras seções de forma assíncrona (não crítico)
+        setTimeout(async () => {
+          try {
+            const [
+              popularGamesData,
+              page3GamesData,
+              cookingGamesData,
+              shootingGamesData,
+              racingGamesData,
+              puzzleGamesData
+            ] = await Promise.all([
+              gameService.getGamesByPage(2),
+              gameService.getGamesByPage(3),
+              gameService.getGamesByPage(4),
+              gameService.getGamesByPage(5),
+              gameService.getGamesByPage(6),
+              gameService.getGamesByPage(7)
+            ])
+            
+            setPopularGames(popularGamesData.sort((a, b) => b.likes - a.likes))
+            setPage3Games(page3GamesData.sort((a, b) => b.likes - a.likes))
+            setCookingGames(cookingGamesData.sort((a, b) => b.likes - a.likes))
+            setShootingGames(shootingGamesData.sort((a, b) => b.likes - a.likes))
+            setRacingGames(racingGamesData.sort((a, b) => b.likes - a.likes))
+            setPuzzleGames(puzzleGamesData.sort((a, b) => b.likes - a.likes))
+          } catch (err) {
+            console.error('Erro ao carregar seções adicionais:', err)
+          }
+        }, 500)
         
         if (gamesData.length === 0) {
           setError('Nenhum jogo encontrado. Execute o script de população do banco de dados.')
@@ -139,9 +140,9 @@ export default function Home() {
         <div className="grid gap-3 sm:gap-4 mb-12">
           {/* Mobile: 2 colunas */}
           <div className="grid grid-cols-2 gap-3 sm:hidden">
-            {filteredGames.map((game) => (
+            {filteredGames.map((game, index) => (
               <div key={game.id} className="aspect-square">
-                <GameCard game={game} />
+                <GameCard game={game} priority={index < 6} />
               </div>
             ))}
           </div>
@@ -155,7 +156,7 @@ export default function Home() {
                   index === 0 ? "col-span-2 row-span-2" : ""
                 }`}
               >
-                <GameCard game={game} />
+                <GameCard game={game} priority={index < 8} />
               </div>
             ))}
           </div>
@@ -169,13 +170,13 @@ export default function Home() {
                   index === 0 ? "col-span-2 row-span-2" : ""
                 }`}
               >
-                <GameCard game={game} />
+                <GameCard game={game} priority={index < 10} />
               </div>
             ))}
           </div>
         </div>
 
-        {/* Seção Jogos Mais Populares - Página 2 */}
+        {/* Seção Jogos Mais Populares - Página 2 - Lazy Loading */}
         {popularGames.length > 0 && (
           <div className="mt-16">
             {/* Título com efeito especial */}
@@ -196,9 +197,9 @@ export default function Home() {
             <div className="w-full">
               {/* Mobile: Layout simples */}
               <div className="grid grid-cols-2 gap-4 sm:hidden">
-                {popularGames.slice(0, 8).map((game) => (
+                {popularGames.slice(0, 8).map((game, index) => (
                   <div key={`popular-${game.id}`} className="aspect-square">
-                    <GameCard game={game} />
+                    <GameCard game={game} priority={index < 4} />
                   </div>
                 ))}
               </div>
@@ -208,29 +209,29 @@ export default function Home() {
                 {/* LINHA 1 */}
                 {/* Horizontal - Coluna 1 */}
                 <div className="col-span-2 aspect-[2.1/1]">
-                  <GameCard game={popularGames[0]} />
+                  <GameCard game={popularGames[0]} priority={true} />
                 </div>
                 {/* Quadrado - Coluna 2 */}
                 <div className="col-span-1 aspect-square">
-                  <GameCard game={popularGames[1]} />
+                  <GameCard game={popularGames[1]} priority={true} />
                 </div>
                 {/* Quadrado - Coluna 2 */}
                 <div className="col-span-1 aspect-square">
-                  <GameCard game={popularGames[2]} />
+                  <GameCard game={popularGames[2]} priority={true} />
                 </div>
                 {/* Vertical - Coluna 3 (ocupa 2 linhas) */}
                 <div className="col-span-1 row-span-2 aspect-[1/2.1]">
-                  <GameCard game={popularGames[3]} />
+                  <GameCard game={popularGames[3]} priority={true} />
                 </div>
                 {/* Quadrado - Coluna 3 */}
                 <div className="col-span-1 aspect-square">
-                  <GameCard game={popularGames[4]} />
+                  <GameCard game={popularGames[4]} priority={true} />
                 </div>
 
                 {/* LINHA 2 */}
                 {/* Quadrado - Coluna 1 */}
                 <div className="col-span-1 aspect-square">
-                  <GameCard game={popularGames[5]} />
+                  <GameCard game={popularGames[5]} priority={true} />
                 </div>
                 {/* Quadrado - Coluna 1 */}
                 <div className="col-span-1 aspect-square">
@@ -555,7 +556,9 @@ export default function Home() {
         )}
       </main>
       
-      <Footer />
+      <Suspense fallback={<div className="py-6 text-center text-white">Carregando...</div>}>
+        <Footer />
+      </Suspense>
     </div>
   )
 } 
