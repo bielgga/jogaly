@@ -73,7 +73,7 @@ const GameCard = memo(function GameCard({ game, priority = false }: GameCardProp
   }, [])
 
   // Memoizar href para evitar re-renders
-  const gameHref = useMemo(() => `/game/${game.id}`, [game.id])
+  const gameHref = useMemo(() => `/jogar/${game.id}`, [game.id])
 
   if (!game) {
     return <GameCardSkeleton />
