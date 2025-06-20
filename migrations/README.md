@@ -1,6 +1,6 @@
 # 📊 Migrations do Banco de Dados
 
-Este diretório contém as migrations SQL para o banco de dados do projeto Jogaly Games.
+Este diretório contém as migrations SQL para o banco de dados do projeto Jogaly.
 
 ## 🚀 Como Executar uma Migration
 

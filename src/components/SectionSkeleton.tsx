@@ -34,7 +34,7 @@ const SectionSkeleton = memo(function SectionSkeleton({
           <div className="animate-pulse">
             <Image
               src="/logojogaly2.png"
-              alt="Carregando Jogaly Games"
+              alt="Carregando Jogaly"
               width={200}
               height={60}
               className="h-12 w-auto opacity-50"

@@ -250,7 +250,7 @@ export default function Home() {
           <div className="animate-bounce">
             <Image
               src="/logojogaly2.png"
-              alt="Carregando Jogaly Games"
+              alt="Carregando Jogaly"
               width={400}
               height={120}
               className="h-32 w-auto"
@@ -302,7 +302,7 @@ export default function Home() {
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Título principal da página - visualmente oculto mas semanticamente correto */}
-        <h1 className="sr-only">Jogos Online Grátis - Jogaly Games</h1>
+        <h1 className="sr-only">Jogos Online Grátis - Jogaly</h1>
         
         {/* Seção Principal - Jogos da Página 1 */}
         <section aria-labelledby="main-games-heading">

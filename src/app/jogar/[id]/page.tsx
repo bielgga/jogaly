@@ -82,7 +82,7 @@ export default function GamePage() {
             <div className="animate-bounce">
               <Image
                 src="/logojogaly2.png"
-                alt="Carregando Jogaly Games"
+                alt="Carregando Jogaly"
                 width={300}
                 height={90}
                 className="h-24 w-auto"
@@ -155,7 +155,7 @@ export default function GamePage() {
             <div className="flex items-center">
               <Image
                 src="/logojogaly2.png"
-                alt="Jogaly Games"
+                alt="Jogaly"
                 width={300}
                 height={90}
                 className="h-24 w-auto"

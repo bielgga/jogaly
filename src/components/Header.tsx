@@ -9,7 +9,7 @@ export default function Header() {
         <div className="flex justify-center items-center">
           <Image
             src="/logojogaly2.png"
-            alt="Jogaly Games"
+            alt="Jogaly"
             width={400}
             height={120}
             className="h-32 w-auto"

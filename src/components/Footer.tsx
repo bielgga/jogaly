@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="flex items-center">
             <Image
               src="/logojogaly2.png"
-              alt="Jogaly Games"
+              alt="Jogaly"
               width={250}
               height={75}
               className="h-16 w-auto"

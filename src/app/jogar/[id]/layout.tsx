@@ -12,16 +12,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     
     if (!game) {
       return {
-        title: 'Jogo não encontrado - Jogaly Games',
+        title: 'Jogo não encontrado - Jogaly',
         description: 'O jogo que você procura não foi encontrado.',
       }
     }
 
     const gameTitle = `${game.title} - Jogue Online Grátis`
-    const gameDescription = `${game.description} Jogue ${game.title} grátis no Jogaly Games. ${game.instructions}`
+    const gameDescription = `${game.description} Jogue ${game.title} grátis no Jogaly. ${game.instructions}`
 
     return {
-      title: `${gameTitle} | Jogaly Games`,
+      title: `${gameTitle} | Jogaly`,
       description: gameDescription.slice(0, 160),
       keywords: [
         game.title.toLowerCase(),
@@ -32,9 +32,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         'html5 games',
         'browser games'
       ].join(', '),
-      authors: [{ name: 'Jogaly Games' }],
-      creator: 'Jogaly Games',
-      publisher: 'Jogaly Games',
+      authors: [{ name: 'Jogaly' }],
+      creator: 'Jogaly',
+      publisher: 'Jogaly',
       robots: 'index, follow',
       openGraph: {
         title: gameTitle,
@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           alt: `${game.title} - Jogue Online Grátis`
         }],
         type: 'website',
-        siteName: 'Jogaly Games',
+        siteName: 'Jogaly',
         locale: 'pt_BR',
       },
       twitter: {
@@ -66,7 +66,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   } catch (error) {
     console.error('Erro ao gerar metadata:', error)
     return {
-      title: 'Erro - Jogaly Games',
+      title: 'Erro - Jogaly',
       description: 'Erro ao carregar informações do jogo.',
     }
   }
@@ -104,7 +104,7 @@ export default async function GameLayout({
       },
       publisher: {
         '@type': 'Organization',
-        name: 'Jogaly Games'
+        name: 'Jogaly'
       }
     }
 

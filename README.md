@@ -1,4 +1,4 @@
-# 🎮 Jogaly Games
+# 🎮 Jogaly
 
 Uma plataforma moderna de jogos online construída com Next.js, TypeScript e Supabase. O Jogaly oferece uma experiência de jogo fluida e interativa com uma ampla variedade de jogos organizados por categorias.
 
@@ -138,7 +138,7 @@ INSERT INTO games (id, title, description, instructions, url, category, tags, th
 
 ```
 
-# Jogaly Games - Otimizações de Performance
+# Jogaly - Otimizações de Performance
 
 ## 🚀 Otimizações Implementadas para Reduzir Operações da Thread Principal
 
