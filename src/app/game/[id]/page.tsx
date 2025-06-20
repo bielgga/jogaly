@@ -1,31 +1,34 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useState, useRef, lazy, Suspense } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { gameService, Game, GameListItem } from '@/lib/supabase'
 import Footer from '@/components/Footer'
-
-// Lazy load do componente de jogos relacionados
-const RelatedGames = lazy(() => import('./RelatedGames'))
+import Image from 'next/image'
 
 export default function GamePage() {
   const params = useParams()
   const router = useRouter()
   const [game, setGame] = useState<Game | null>(null)
-  const [relatedGames, setRelatedGames] = useState<GameListItem[]>([])
+  const [mostViewedGames, setMostViewedGames] = useState<GameListItem[]>([])
+  const [allGames, setAllGames] = useState<GameListItem[]>([])
+  const [moreGames, setMoreGames] = useState<GameListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const viewIncrementedRef = useRef<string | null>(null)
 
   useEffect(() => {
     async function loadGame() {
-    const gameId = params.id as string
+      const gameId = params.id as string
       setLoading(true)
       setError(null)
       
       try {
-        // Carregar jogo principal
-        const gameData = await gameService.getGameById(gameId)
+        // Carregar jogo principal e todos os jogos ordenados por views
+        const [gameData, allGamesData] = await Promise.all([
+          gameService.getGameById(gameId),
+          gameService.getAllGamesAllPages()
+        ])
         
         if (!gameData) {
           setError('Jogo não encontrado')
@@ -34,6 +37,20 @@ export default function GamePage() {
         }
         
         setGame(gameData)
+        
+        // Filtrar o jogo atual e ordenar por views (mais jogados)
+        const filteredGames = allGamesData
+          .filter(g => g.id !== gameId)
+          .sort((a, b) => b.views - a.views)
+        
+        // Top 3 mais jogados
+        setMostViewedGames(filteredGames.slice(0, 3))
+        
+        // Próximos 28 mais jogados para a sidebar
+        setAllGames(filteredGames.slice(3, 31))
+        
+        // Próximos 100 mais jogados para a seção embaixo
+        setMoreGames(filteredGames.slice(31, 131))
         
         // Incrementar visualizações apenas uma vez por jogo
         if (viewIncrementedRef.current !== gameId) {
@@ -44,12 +61,6 @@ export default function GamePage() {
         } else {
           console.log('⏭️ Visualização já incrementada para jogo:', gameId)
         }
-        
-        // Carregar jogos relacionados de forma assíncrona (não bloquear a renderização)
-        setTimeout(async () => {
-          const related = await gameService.getRelatedGames(gameId, gameData.category, 10)
-          setRelatedGames(related)
-        }, 100)
         
       } catch (err) {
         console.error('Erro ao carregar jogo:', err)
@@ -139,7 +150,7 @@ export default function GamePage() {
             {/* Logo Central */}
             <div className="flex items-center space-x-3">
               <div className="bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold text-4xl shadow-lg" style={{ transform: 'rotate(-5deg)' }}>
-              Jogaly
+                Jogaly
               </div>
               <div className="text-5xl font-bold text-white">GAMES</div>
             </div>
@@ -151,49 +162,15 @@ export default function GamePage() {
       </header>
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          {/* Área do jogo - Esquerda (3 colunas) */}
-          <div className="xl:col-span-3">
-            {/* Container do jogo com título e visualizações */}
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden mb-6">
-              {/* Header do jogo com título e visualizações */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <h1 className="text-xl sm:text-2xl font-bold text-white">{game.title}</h1>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center bg-white/20 backdrop-blur-sm text-white px-3 py-2 rounded-full">
-                      <span className="text-blue-300 mr-2">👁️</span>
-                      <span className="font-semibold text-sm sm:text-base">{game.views.toLocaleString()} visualizações</span>
-                    </div>
-                    <button
-                      onClick={async () => {
-                        // Atualizar imediatamente na interface (otimistic update)
-                        setGame(prev => prev ? {...prev, likes: prev.likes + 1} : null)
-                        
-                        // Tentar atualizar no servidor
-                        const newLikes = await gameService.incrementLikes(game.id)
-                        if (newLikes !== null) {
-                          // Se o servidor retornou um valor, usar o valor correto
-                          setGame(prev => prev ? {...prev, likes: newLikes} : null)
-                        } else {
-                          // Se houve erro, reverter a mudança otimista
-                          setGame(prev => prev ? {...prev, likes: prev.likes - 1} : null)
-                        }
-                      }}
-                      className="flex items-center bg-white/20 backdrop-blur-sm text-white px-3 py-2 rounded-full transition-all duration-200 hover:scale-105 active:scale-95 hover:bg-white/30"
-                    >
-                      <span className="text-red-400 mr-2">❤️</span>
-                      <span className="font-semibold text-sm sm:text-base">{game.likes.toLocaleString()}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Área do jogo */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Área principal do jogo - Esquerda (3 colunas) */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Container do iframe */}
+            <div className="bg-black/20 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-white/10">
               <div className="relative aspect-video">
                 <iframe
                   src={game.url}
-                  className="absolute top-0 left-0 w-full h-full border-0"
+                  className="absolute top-0 left-0 w-full h-full border-0 rounded-2xl"
                   title={game.title}
                   allowFullScreen
                   loading="lazy"
@@ -201,43 +178,209 @@ export default function GamePage() {
               </div>
             </div>
 
-            {/* Jogos Relacionados com Lazy Loading */}
-            <Suspense fallback={
-              <div className="mt-8">
-                <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-                  <span className="mr-3">🔥</span>
-                  Jogos Mais Jogados
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="aspect-square bg-gray-300 animate-pulse rounded-2xl"></div>
-                  ))}
+            {/* Título e descrição juntos */}
+            <div className="bg-black/20 backdrop-blur-sm rounded-xl p-6 border border-white/10 space-y-6">
+              {/* Título com estatísticas */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h1 className="text-3xl font-bold text-white">{game.title}</h1>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center bg-blue-500/20 backdrop-blur-sm text-blue-300 px-4 py-2 rounded-full border border-blue-400/30">
+                    <span className="text-blue-400 mr-2">👁️</span>
+                    <span className="font-semibold">{game.views.toLocaleString()} visualizações</span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      // Atualizar imediatamente na interface (otimistic update)
+                      setGame(prev => prev ? {...prev, likes: prev.likes + 1} : null)
+                      
+                      // Tentar atualizar no servidor
+                      const newLikes = await gameService.incrementLikes(game.id)
+                      if (newLikes !== null) {
+                        // Se o servidor retornou um valor, usar o valor correto
+                        setGame(prev => prev ? {...prev, likes: newLikes} : null)
+                      } else {
+                        // Se houve erro, reverter a mudança otimista
+                        setGame(prev => prev ? {...prev, likes: prev.likes - 1} : null)
+                      }
+                    }}
+                    className="flex items-center bg-red-500/20 backdrop-blur-sm text-red-300 px-4 py-2 rounded-full border border-red-400/30 transition-all duration-200 hover:scale-105 active:scale-95 hover:bg-red-500/30"
+                  >
+                    <span className="text-red-400 mr-2">❤️</span>
+                    <span className="font-semibold">{game.likes.toLocaleString()}</span>
+                  </button>
                 </div>
               </div>
-            }>
-              <RelatedGames games={relatedGames} />
-            </Suspense>
+
+              {/* Descrição */}
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center">
+                  <span className="mr-3">📝</span>
+                  Sobre o Jogo
+                </h2>
+                <p className="text-gray-300 leading-relaxed text-lg">{game.description}</p>
+              </div>
+
+              {/* Instruções */}
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center">
+                  <span className="mr-3">🎯</span>
+                  Como Jogar
+                </h2>
+                <p className="text-gray-300 leading-relaxed text-lg">{game.instructions}</p>
+              </div>
+            </div>
           </div>
 
-          {/* Informações do jogo - Direita (1 coluna) */}
-          <div className="xl:col-span-1 space-y-6">
-            {/* Descrição */}
-            <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                <span className="mr-2">📝</span>
-                Sobre o Jogo
-              </h2>
-              <p className="text-gray-700 leading-relaxed">{game.description}</p>
-            </div>
+          {/* Jogos mais jogados - Direita (1 coluna) */}
+          <div className="lg:col-span-1">
+            <div className="bg-black/20 backdrop-blur-sm rounded-xl p-6 border border-white/10 sticky top-8 space-y-8">
+              {/* Top 3 Jogos Mais Jogados */}
+              <div>
+                <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+                  <span className="mr-3">🔥</span>
+                  Top Jogos Mais Jogados
+                </h2>
+                
+                {mostViewedGames.length > 0 ? (
+                  <div className="space-y-4">
+                    {mostViewedGames.map((mostViewedGame, index) => (
+                      <a
+                        key={mostViewedGame.id}
+                        href={`/game/${mostViewedGame.id}`}
+                        className="group flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-200 cursor-pointer border border-white/10 hover:border-white/20 hover:shadow-lg backdrop-blur-sm"
+                      >
+                        {/* Posição */}
+                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-full flex items-center justify-center text-lg font-bold shadow-lg">
+                          {index + 1}
+                        </div>
+                        
+                        {/* Thumbnail */}
+                        <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-white/20">
+                          <Image
+                            src={mostViewedGame.thumb}
+                            alt={mostViewedGame.title}
+                            fill
+                            className="object-cover group-hover:scale-110 transition-transform duration-200"
+                            sizes="64px"
+                          />
+                        </div>
+                        
+                        {/* Informações */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-white text-sm leading-tight line-clamp-2 group-hover:text-yellow-400 transition-colors">
+                            {mostViewedGame.title}
+                          </h3>
+                          <div className="flex items-center gap-3 mt-2">
+                            <div className="flex items-center text-xs text-gray-400">
+                              <span className="text-blue-400 mr-1">👁️</span>
+                              <span>
+                                {mostViewedGame.views >= 1000000 
+                                  ? `${(mostViewedGame.views / 1000000).toFixed(1)}M` 
+                                  : mostViewedGame.views >= 1000 
+                                  ? `${(mostViewedGame.views / 1000).toFixed(1)}k` 
+                                  : mostViewedGame.views}
+                              </span>
+                            </div>
+                            <div className="flex items-center text-xs text-gray-400">
+                              <span className="text-red-400 mr-1">❤️</span>
+                              <span>
+                                {mostViewedGame.likes >= 1000 
+                                  ? `${(mostViewedGame.likes / 1000).toFixed(1)}k` 
+                                  : mostViewedGame.likes}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                        <div className="w-10 h-10 bg-white/10 animate-pulse rounded-full"></div>
+                        <div className="w-16 h-16 bg-white/10 animate-pulse rounded-lg"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-white/10 animate-pulse rounded"></div>
+                          <div className="h-3 bg-white/10 animate-pulse rounded w-2/3"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            {/* Instruções */}
-            <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                <span className="mr-2">🎯</span>
-                Como Jogar
-              </h2>
-              <p className="text-gray-700 leading-relaxed">{game.instructions}</p>
+              {/* Mais Jogos - Ícones Pequenos */}
+              <div>
+                
+                {allGames.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-3">
+                    {allGames.map((gameItem) => (
+                      <a
+                        key={gameItem.id}
+                        href={`/game/${gameItem.id}`}
+                        className="group relative aspect-square rounded-lg overflow-hidden border border-white/20 hover:border-white/40 transition-all duration-200 cursor-pointer hover:scale-105"
+                        title={gameItem.title}
+                      >
+                        <Image
+                          src={gameItem.thumb}
+                          alt={gameItem.title}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-200"
+                          sizes="80px"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-3">
+                    {[...Array(28)].map((_, i) => (
+                      <div key={i} className="aspect-square bg-white/10 animate-pulse rounded-lg border border-white/10"></div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
+          </div>
+        </div>
+
+        {/* Nova seção com 100 jogos - Embaixo de tudo */}
+        <div className="mt-12">
+          <div className="bg-black/20 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <span className="mr-3">🎯</span>
+              Descubra Mais Jogos
+            </h2>
+            
+            {moreGames.length > 0 ? (
+              <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-10 xl:grid-cols-10 gap-3">
+                {moreGames.map((gameItem) => (
+                  <a
+                    key={gameItem.id}
+                    href={`/game/${gameItem.id}`}
+                    className="group relative aspect-square rounded-lg overflow-hidden border border-white/20 hover:border-white/40 transition-all duration-200 cursor-pointer hover:scale-105"
+                    title={gameItem.title}
+                  >
+                    <Image
+                      src={gameItem.thumb}
+                      alt={gameItem.title}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-200"
+                      sizes="(max-width: 640px) 16vw, (max-width: 768px) 12vw, (max-width: 1024px) 10vw, 10vw"
+                      quality={90}
+                      priority={false}
+                    />
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-10 xl:grid-cols-10 gap-3">
+                {[...Array(100)].map((_, i) => (
+                  <div key={i} className="aspect-square bg-white/10 animate-pulse rounded-lg border border-white/10"></div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>

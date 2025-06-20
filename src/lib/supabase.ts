@@ -258,4 +258,25 @@ export const gameService = {
     setCachedData(cacheKey, games)
     return games
   },
+
+  // Buscar todos os jogos de todas as páginas (sem filtro de página)
+  async getAllGamesAllPages(): Promise<GameListItem[]> {
+    const cacheKey = 'games_all_pages'
+    const cached = getCachedData(cacheKey)
+    if (cached) return cached
+
+    const { data, error } = await supabase
+      .from('games')
+      .select('id,title,thumb,likes,views,page')
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Erro ao buscar todos os jogos:', error)
+      throw error
+    }
+    
+    const games = (data || []) as GameListItem[]
+    setCachedData(cacheKey, games)
+    return games
+  },
 } 
