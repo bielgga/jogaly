@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap');
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Fredoka', sans-serif;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: #07257b;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Efeito de background estático com gradiente e formas */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.4) 0%, transparent 60%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
+    radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.3) 0%, transparent 60%),
+    linear-gradient(135deg, #07257b 0%, #0f3460 50%, #1e40af 100%);
+  z-index: -2;
+}
+
+/* Partículas flutuantes */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(3px 3px at 20px 30px, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.2), transparent),
+    radial-gradient(2px 2px at 90px 40px, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.2), transparent),
+    radial-gradient(3px 3px at 160px 30px, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(1px 1px at 200px 60px, rgba(255, 255, 255, 0.25), transparent);
+  background-repeat: repeat;
+  background-size: 250px 120px;
+  z-index: -1;
+  animation: floatingParticles 20s linear infinite;
+}
+
+/* Animações */
+@keyframes floatingParticles {
+  0% {
+    transform: translateY(0px) translateX(0px);
+  }
+  100% {
+    transform: translateY(-100px) translateX(50px);
+  }
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+/* Classe para truncar texto em 2 linhas */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Animações customizadas para o loading */
+@keyframes loading-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.9) translateY(0px);
+    opacity: 0.8;
+  }
+  40% {
+    transform: scale(1.3) translateY(-15px);
+    opacity: 1;
+  }
+}
+
+@keyframes loading-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(251, 191, 36, 1), 0 0 35px rgba(251, 191, 36, 0.8);
+  }
+}
+
+.loading-dot {
+  animation: loading-bounce 1.2s infinite ease-in-out both;
+}
+
+.loading-dot-glow {
+  animation: loading-glow 1.8s infinite ease-in-out both;
+} 

@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+oq for pra fazer no supabase, sempre me manda q eu executo diretamente la. nunca crie scripts para rodar. nunca mexa em migrations q ja existem. Sempre crie uma migration nova. POr exemplo pedi pra atualizar todos os jogos, crie uma migration nova que faça isso
