@@ -1,10 +1,10 @@
 'use client'
 
 import Image from 'next/image'
-import { Game } from '@/lib/supabase'
+import { GameListItem } from '@/lib/supabase'
 
 interface RelatedGamesProps {
-  games: Game[]
+  games: GameListItem[]
 }
 
 export default function RelatedGames({ games }: RelatedGamesProps) {

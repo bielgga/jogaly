@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, lazy, Suspense } from 'react'
-import { gameService, Game } from '@/lib/supabase'
+import { useState, useEffect, lazy, Suspense, useMemo, useCallback, memo } from 'react'
+import { gameService, GameListItem } from '@/lib/supabase'
 import GameCard from '@/components/GameCard'
 import Header from '@/components/Header'
 import SectionSkeleton from '@/components/SectionSkeleton'
@@ -9,15 +9,98 @@ import SectionSkeleton from '@/components/SectionSkeleton'
 // Lazy load do Footer para reduzir bundle inicial
 const Footer = lazy(() => import('@/components/Footer'))
 
+// Componente memoizado para seções de jogos
+const GameSection = memo(({ 
+  games, 
+  title, 
+  emoji, 
+  sectionId,
+  gridType = 'uniform',
+  loading = false 
+}: {
+  games: GameListItem[]
+  title: string
+  emoji: string
+  sectionId: string
+  gridType?: 'uniform' | 'masonry' | 'simple'
+  loading?: boolean
+}) => {
+  if (loading) {
+    return (
+      <SectionSkeleton 
+        title={title} 
+        emoji={emoji}
+        gridCols={{ mobile: 3, tablet: 6, desktop: 8 }}
+        itemCount={games.length || 12}
+      />
+    )
+  }
+
+  if (games.length === 0) return null
+
+  return (
+    <section aria-labelledby={`${sectionId}-heading`}>
+      <h2 id={`${sectionId}-heading`} className="sr-only">{title}</h2>
+      <div className="mt-16">
+        {/* Título */}
+        <div className="relative mb-12">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-full h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-50"></div>
+          </div>
+          <div className="relative flex justify-center">
+            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-2xl font-bold text-3xl shadow-2xl transform -rotate-1 hover:rotate-0 transition-transform duration-300">
+              <span className="mr-3">{emoji}</span>
+              {title}
+              <span className="ml-3">{emoji}</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Grid de Jogos */}
+        <div className="w-full">
+          {/* Mobile: 3 colunas menores */}
+          <div className="grid grid-cols-3 gap-2 sm:hidden">
+            {games.map((game) => (
+              <div key={`${sectionId}-${game.id}`} className="aspect-square">
+                <GameCard game={game} />
+              </div>
+            ))}
+          </div>
+
+          {/* Tablet: 6 colunas menores */}
+          <div className="hidden sm:grid lg:hidden grid-cols-6 gap-3">
+            {games.map((game) => (
+              <div key={`${sectionId}-${game.id}`} className="aspect-square">
+                <GameCard game={game} />
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: 8 colunas menores */}
+          <div className="hidden lg:grid grid-cols-8 gap-3">
+            {games.map((game) => (
+              <div key={`${sectionId}-${game.id}`} className="aspect-square">
+                <GameCard game={game} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+})
+
+GameSection.displayName = 'GameSection'
+
+// Componente principal otimizado
 export default function Home() {
-  const [games, setGames] = useState<Game[]>([])
-  const [filteredGames, setFilteredGames] = useState<Game[]>([])
-  const [popularGames, setPopularGames] = useState<Game[]>([])
-  const [page3Games, setPage3Games] = useState<Game[]>([])
-  const [cookingGames, setCookingGames] = useState<Game[]>([])
-  const [shootingGames, setShootingGames] = useState<Game[]>([])
-  const [racingGames, setRacingGames] = useState<Game[]>([])
-  const [puzzleGames, setPuzzleGames] = useState<Game[]>([])
+  const [games, setGames] = useState<GameListItem[]>([])
+  const [popularGames, setPopularGames] = useState<GameListItem[]>([])
+  const [page3Games, setPage3Games] = useState<GameListItem[]>([])
+  const [cookingGames, setCookingGames] = useState<GameListItem[]>([])
+  const [shootingGames, setShootingGames] = useState<GameListItem[]>([])
+  const [racingGames, setRacingGames] = useState<GameListItem[]>([])
+  const [puzzleGames, setPuzzleGames] = useState<GameListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
@@ -31,7 +114,86 @@ export default function Home() {
     puzzle: true
   })
 
+  // Memoizar jogos filtrados e ordenados
+  const filteredGames = useMemo(() => {
+    return games.sort((a, b) => b.likes - a.likes)
+  }, [games])
+
+  // Callback memoizado para carregar seções
+  const loadSections = useCallback(async () => {
+    try {
+      const [
+        popularGamesData,
+        page3GamesData,
+        cookingGamesData,
+        shootingGamesData,
+        racingGamesData,
+        puzzleGamesData
+      ] = await Promise.all([
+        gameService.getGamesByPage(2),
+        gameService.getGamesByPage(3),
+        gameService.getGamesByPage(4),
+        gameService.getGamesByPage(5),
+        gameService.getGamesByPage(6),
+        gameService.getGamesByPage(7)
+      ])
+
+      // Usar requestAnimationFrame para operações de DOM não críticas
+      const updateSections = () => {
+        // Atualizar seções de forma escalonada para reduzir blocking
+        setPopularGames(popularGamesData.sort((a, b) => b.likes - a.likes))
+        setSectionsLoading(prev => ({ ...prev, popular: false }))
+        
+        requestAnimationFrame(() => {
+          setPage3Games(page3GamesData.sort((a, b) => b.likes - a.likes))
+          setSectionsLoading(prev => ({ ...prev, page3: false }))
+          
+          requestAnimationFrame(() => {
+            setShootingGames(shootingGamesData.sort((a, b) => b.likes - a.likes))
+            setSectionsLoading(prev => ({ ...prev, shooting: false }))
+            
+            requestAnimationFrame(() => {
+              setRacingGames(racingGamesData.sort((a, b) => b.likes - a.likes))
+              setSectionsLoading(prev => ({ ...prev, racing: false }))
+              
+              requestAnimationFrame(() => {
+                setPuzzleGames(puzzleGamesData.sort((a, b) => b.likes - a.likes))
+                setSectionsLoading(prev => ({ ...prev, puzzle: false }))
+                
+                requestAnimationFrame(() => {
+                  setCookingGames(cookingGamesData.sort((a, b) => b.likes - a.likes))
+                  setSectionsLoading(prev => ({ ...prev, cooking: false }))
+                })
+              })
+            })
+          })
+        })
+      }
+
+      // Usar requestIdleCallback se disponível, senão requestAnimationFrame
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        window.requestIdleCallback(updateSections, { timeout: 5000 })
+      } else {
+        requestAnimationFrame(updateSections)
+      }
+      
+    } catch (err) {
+      console.error('Erro ao carregar seções adicionais:', err)
+      // Em caso de erro, remover os skeletons
+      setSectionsLoading({
+        popular: false,
+        page3: false,
+        cooking: false,
+        shooting: false,
+        racing: false,
+        puzzle: false
+      })
+    }
+  }, [])
+
   useEffect(() => {
+    let isMounted = true
+
     async function loadGames() {
       setLoading(true)
       setError(null)
@@ -39,121 +201,68 @@ export default function Home() {
       try {
         // Carregar jogos da página 1 primeiro (crítico)
         const gamesData = await gameService.getAllGames()
+        
+        if (!isMounted) return
+        
         const sortedGames = gamesData.sort((a, b) => b.likes - a.likes)
         setGames(sortedGames)
-        setFilteredGames(sortedGames)
-        
-        // Carregar outras seções de forma assíncrona (não crítico)
-        // Usar requestIdleCallback se disponível para melhor performance
-        const loadSections = () => {
-          Promise.all([
-            gameService.getGamesByPage(2),
-            gameService.getGamesByPage(3),
-            gameService.getGamesByPage(4),
-            gameService.getGamesByPage(5),
-            gameService.getGamesByPage(6),
-            gameService.getGamesByPage(7)
-          ]).then(([
-            popularGamesData,
-            page3GamesData,
-            cookingGamesData,
-            shootingGamesData,
-            racingGamesData,
-            puzzleGamesData
-          ]) => {
-            // Atualizar seções uma por vez para reduzir layout shifts
-            setPopularGames(popularGamesData.sort((a, b) => b.likes - a.likes))
-            setSectionsLoading(prev => ({ ...prev, popular: false }))
-            
-            setTimeout(() => {
-              setPage3Games(page3GamesData.sort((a, b) => b.likes - a.likes))
-              setSectionsLoading(prev => ({ ...prev, page3: false }))
-            }, 100)
-            
-            setTimeout(() => {
-              setShootingGames(shootingGamesData.sort((a, b) => b.likes - a.likes))
-              setSectionsLoading(prev => ({ ...prev, shooting: false }))
-            }, 200)
-            
-            setTimeout(() => {
-              setRacingGames(racingGamesData.sort((a, b) => b.likes - a.likes))
-              setSectionsLoading(prev => ({ ...prev, racing: false }))
-            }, 300)
-            
-            setTimeout(() => {
-              setPuzzleGames(puzzleGamesData.sort((a, b) => b.likes - a.likes))
-              setSectionsLoading(prev => ({ ...prev, puzzle: false }))
-            }, 400)
-            
-            setTimeout(() => {
-              setCookingGames(cookingGamesData.sort((a, b) => b.likes - a.likes))
-              setSectionsLoading(prev => ({ ...prev, cooking: false }))
-            }, 500)
-          }).catch(err => {
-            console.error('Erro ao carregar seções adicionais:', err)
-            // Em caso de erro, remover os skeletons
-            setSectionsLoading({
-              popular: false,
-              page3: false,
-              cooking: false,
-              shooting: false,
-              racing: false,
-              puzzle: false
-            })
-          })
-        }
-
-        // Usar requestIdleCallback se disponível, senão setTimeout
-        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-          window.requestIdleCallback(loadSections)
-        } else {
-          setTimeout(loadSections, 100)
-        }
         
         if (gamesData.length === 0) {
           setError('Nenhum jogo encontrado. Execute o script de população do banco de dados.')
+        } else {
+          // Carregar outras seções após um delay mínimo
+          setTimeout(() => {
+            if (isMounted) {
+              loadSections()
+            }
+          }, 100)
         }
         
       } catch (err) {
         console.error('Erro ao carregar jogos:', err)
-        setError('Erro ao carregar jogos. Verifique se o Supabase está configurado corretamente.')
+        if (isMounted) {
+          setError('Erro ao carregar jogos. Verifique se o Supabase está configurado corretamente.')
+        }
       }
       
-      setLoading(false)
+      if (isMounted) {
+        setLoading(false)
+      }
     }
     
     loadGames()
-  }, [])
 
-  useEffect(() => {
-    // Manter a ordenação por curtidas ao filtrar
-    const sortedGames = games.sort((a, b) => b.likes - a.likes)
-    setFilteredGames(sortedGames)
-  }, [games])
+    return () => {
+      isMounted = false
+    }
+  }, [loadSections])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          {/* Logo com animação */}
-          <div className="mb-8">
-            <div className="inline-flex items-center space-x-3">
-              <div className="bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold text-4xl shadow-lg transform -rotate-2 animate-bounce">
-          Jogaly
-          </div>
-              <span className="text-5xl font-bold text-white animate-pulse">GAMES</span>
+  // Componente de loading otimizado
+  const LoadingComponent = useMemo(() => (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        {/* Logo com animação */}
+        <div className="mb-8">
+          <div className="inline-flex items-center space-x-3">
+            <div className="bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold text-4xl shadow-lg transform -rotate-2 animate-bounce">
+              Jogaly
             </div>
-          </div>
-          
-          {/* Dots animados com efeito mais bonito */}
-          <div className="flex justify-center items-center space-x-3">
-            <div className="w-5 h-5 bg-yellow-400 rounded-full animate-pulse shadow-lg"></div>
-            <div className="w-5 h-5 bg-white rounded-full animate-pulse shadow-lg" style={{animationDelay: '0.3s'}}></div>
-            <div className="w-5 h-5 bg-yellow-400 rounded-full animate-pulse shadow-lg" style={{animationDelay: '0.6s'}}></div>
+            <span className="text-5xl font-bold text-white animate-pulse">GAMES</span>
           </div>
         </div>
+        
+        {/* Dots animados com efeito mais bonito */}
+        <div className="flex justify-center items-center space-x-3">
+          <div className="w-5 h-5 bg-yellow-400 rounded-full animate-pulse shadow-lg"></div>
+          <div className="w-5 h-5 bg-white rounded-full animate-pulse shadow-lg" style={{animationDelay: '0.3s'}}></div>
+          <div className="w-5 h-5 bg-yellow-400 rounded-full animate-pulse shadow-lg" style={{animationDelay: '0.6s'}}></div>
+        </div>
       </div>
-    )
+    </div>
+  ), [])
+
+  if (loading) {
+    return LoadingComponent
   }
 
   if (error) {
@@ -375,300 +484,46 @@ export default function Home() {
           </section>
         )}
 
-        {/* Seção Escolhas do Jogaly - Página 3 */}
-        {sectionsLoading.page3 ? (
-          <SectionSkeleton 
-            title="Escolhas do Jogaly" 
-            emoji="⭐"
-            gridCols={{ mobile: 3, tablet: 6, desktop: 8 }}
-            itemCount={24}
-          />
-        ) : (
-          <section aria-labelledby="jogaly-picks-heading">
-            <h2 id="jogaly-picks-heading" className="sr-only">Escolhas do Jogaly</h2>
-            <div className="mt-16">
-              {/* Título */}
-              <div className="relative mb-12">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-full h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent opacity-50"></div>
-                </div>
-                <div className="relative flex justify-center">
-                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-2xl font-bold text-3xl shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300">
-                    <span className="mr-3">⭐</span>
-                    Escolhas do Jogaly
-                    <span className="ml-3">⭐</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Grid de Jogos da Página 3 */}
-              <div className="w-full">
-                {/* Mobile: 3 colunas */}
-                <div className="grid grid-cols-3 gap-3 sm:hidden">
-                  {page3Games.slice(0, 12).map((game) => (
-                    <div key={`page3-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
+        {/* Usar componentes memoizados para as outras seções */}
+        <GameSection
+          games={page3Games}
+          title="Escolhas do Jogaly"
+          emoji="⭐"
+          sectionId="page3"
+          loading={sectionsLoading.page3}
+        />
 
-                {/* Tablet: 6 colunas */}
-                <div className="hidden sm:grid lg:hidden grid-cols-6 gap-4">
-                  {page3Games.slice(0, 18).map((game) => (
-                    <div key={`page3-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
+        <GameSection
+          games={shootingGames}
+          title="Jogos de Tiroteiro"
+          emoji="🎯"
+          sectionId="shooting"
+          loading={sectionsLoading.shooting}
+        />
 
-                {/* Desktop: 8 colunas */}
-                <div className="hidden lg:grid grid-cols-8 gap-4">
-                  {page3Games.map((game) => (
-                    <div key={`page3-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
+        <GameSection
+          games={racingGames}
+          title="Jogos de Corrida"
+          emoji="🏎️"
+          sectionId="racing"
+          loading={sectionsLoading.racing}
+        />
 
-        {/* Seção Jogos de Tiroteiro - Página 5 */}
-        {sectionsLoading.shooting ? (
-          <SectionSkeleton 
-            title="Jogos de Tiroteiro" 
-            emoji="🎯"
-            gridCols={{ mobile: 3, tablet: 6, desktop: 8 }}
-            itemCount={16}
-          />
-        ) : shootingGames.length > 0 && (
-          <section aria-labelledby="shooting-games-heading">
-            <h2 id="shooting-games-heading" className="sr-only">Jogos de Tiroteiro</h2>
-            <div className="mt-16">
-              {/* Título com tema de tiro */}
-              <div className="relative mb-12">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-full h-1 bg-gradient-to-r from-transparent via-gray-400 to-transparent opacity-50"></div>
-                </div>
-                <div className="relative flex justify-center">
-                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-2xl font-bold text-3xl shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-300">
-                    <span className="mr-3">🎯</span>
-                    Jogos de Tiroteiro
-                    <span className="ml-3">🔫</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Grid uniforme - todos os jogos do mesmo tamanho */}
-              <div className="w-full">
-                {/* Mobile: 3 colunas menores */}
-                <div className="grid grid-cols-3 gap-2 sm:hidden">
-                  {shootingGames.map((game) => (
-                    <div key={`shooting-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
+        <GameSection
+          games={puzzleGames}
+          title="Jogos de Quebra-Cabeça"
+          emoji="🧩"
+          sectionId="puzzle"
+          loading={sectionsLoading.puzzle}
+        />
 
-                {/* Tablet: 6 colunas menores */}
-                <div className="hidden sm:grid lg:hidden grid-cols-6 gap-3">
-                  {shootingGames.map((game) => (
-                    <div key={`shooting-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Desktop: 8 colunas menores */}
-                <div className="hidden lg:grid grid-cols-8 gap-3">
-                  {shootingGames.map((game) => (
-                    <div key={`shooting-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Seção Jogos de Corrida - Página 6 */}
-        {sectionsLoading.racing ? (
-          <SectionSkeleton 
-            title="Jogos de Corrida" 
-            emoji="🏎️"
-            gridCols={{ mobile: 3, tablet: 6, desktop: 8 }}
-            itemCount={12}
-          />
-        ) : racingGames.length > 0 && (
-          <section aria-labelledby="racing-games-heading">
-            <h2 id="racing-games-heading" className="sr-only">Jogos de Corrida</h2>
-            <div className="mt-16">
-              {/* Título com tema de corrida */}
-              <div className="relative mb-12">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-50"></div>
-                </div>
-                <div className="relative flex justify-center">
-                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-2xl font-bold text-3xl shadow-2xl transform -rotate-1 hover:rotate-0 transition-transform duration-300">
-                    <span className="mr-3">🏎️</span>
-                    Jogos de Corrida
-                    <span className="ml-3">🏁</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Grid uniforme - todos os jogos do mesmo tamanho */}
-              <div className="w-full">
-                {/* Mobile: 3 colunas menores */}
-                <div className="grid grid-cols-3 gap-2 sm:hidden">
-                  {racingGames.map((game) => (
-                    <div key={`racing-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Tablet: 6 colunas menores */}
-                <div className="hidden sm:grid lg:hidden grid-cols-6 gap-3">
-                  {racingGames.map((game) => (
-                    <div key={`racing-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Desktop: 8 colunas menores */}
-                <div className="hidden lg:grid grid-cols-8 gap-3">
-                  {racingGames.map((game) => (
-                    <div key={`racing-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Seção Jogos de Quebra-cabeça - Página 7 */}
-        {sectionsLoading.puzzle ? (
-          <SectionSkeleton 
-            title="Jogos de Quebra-Cabeça" 
-            emoji="🧩"
-            gridCols={{ mobile: 3, tablet: 6, desktop: 8 }}
-            itemCount={16}
-          />
-        ) : puzzleGames.length > 0 && (
-          <section aria-labelledby="puzzle-games-heading">
-            <h2 id="puzzle-games-heading" className="sr-only">Jogos de Quebra-Cabeça</h2>
-            <div className="mt-16">
-              {/* Título com tema de puzzle */}
-              <div className="relative mb-12">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-full h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent opacity-50"></div>
-                </div>
-                <div className="relative flex justify-center">
-                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-2xl font-bold text-3xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-300">
-                    <span className="mr-3">🧩</span>
-                    Jogos de Quebra-Cabeça
-                    <span className="ml-3">🔍</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Grid uniforme - todos os jogos do mesmo tamanho */}
-              <div className="w-full">
-                {/* Mobile: 3 colunas menores */}
-                <div className="grid grid-cols-3 gap-2 sm:hidden">
-                  {puzzleGames.map((game) => (
-                    <div key={`puzzle-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Tablet: 6 colunas menores */}
-                <div className="hidden sm:grid lg:hidden grid-cols-6 gap-3">
-                  {puzzleGames.map((game) => (
-                    <div key={`puzzle-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Desktop: 8 colunas menores */}
-                <div className="hidden lg:grid grid-cols-8 gap-3">
-                  {puzzleGames.map((game) => (
-                    <div key={`puzzle-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Seção Jogos de Cozinhar - Página 4 */}
-        {sectionsLoading.cooking ? (
-          <SectionSkeleton 
-            title="Jogos de Cozinhar" 
-            emoji="👨‍🍳"
-            gridCols={{ mobile: 3, tablet: 6, desktop: 8 }}
-            itemCount={12}
-          />
-        ) : cookingGames.length > 0 && (
-          <section aria-labelledby="cooking-games-heading">
-            <h2 id="cooking-games-heading" className="sr-only">Jogos de Cozinhar</h2>
-            <div className="mt-16">
-              {/* Título com tema culinário */}
-              <div className="relative mb-12">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-full h-1 bg-gradient-to-r from-transparent via-red-400 to-transparent opacity-50"></div>
-                </div>
-                <div className="relative flex justify-center">
-                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-2xl font-bold text-3xl shadow-2xl transform -rotate-1 hover:rotate-0 transition-transform duration-300">
-                    <span className="mr-3">👨‍🍳</span>
-                    Jogos de Cozinhar
-                    <span className="ml-3">🍳</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Grid uniforme - todos os jogos do mesmo tamanho */}
-              <div className="w-full">
-                {/* Mobile: 3 colunas menores */}
-                <div className="grid grid-cols-3 gap-2 sm:hidden">
-                  {cookingGames.map((game) => (
-                    <div key={`cooking-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Tablet: 6 colunas menores */}
-                <div className="hidden sm:grid lg:hidden grid-cols-6 gap-3">
-                  {cookingGames.map((game) => (
-                    <div key={`cooking-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Desktop: 8 colunas menores */}
-                <div className="hidden lg:grid grid-cols-8 gap-3">
-                  {cookingGames.map((game) => (
-                    <div key={`cooking-${game.id}`} className="aspect-square">
-                      <GameCard game={game} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
+        <GameSection
+          games={cookingGames}
+          title="Jogos de Cozinhar"
+          emoji="👨‍🍳"
+          sectionId="cooking"
+          loading={sectionsLoading.cooking}
+        />
       </main>
       
       <Suspense fallback={

@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useRef, lazy, Suspense } from 'react'
-import { gameService, Game } from '@/lib/supabase'
+import { gameService, Game, GameListItem } from '@/lib/supabase'
 import Footer from '@/components/Footer'
 
 // Lazy load do componente de jogos relacionados
@@ -12,7 +12,7 @@ export default function GamePage() {
   const params = useParams()
   const router = useRouter()
   const [game, setGame] = useState<Game | null>(null)
-  const [relatedGames, setRelatedGames] = useState<Game[]>([])
+  const [relatedGames, setRelatedGames] = useState<GameListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const viewIncrementedRef = useRef<string | null>(null)

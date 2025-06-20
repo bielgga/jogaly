@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 // Configuração do Supabase - sempre pega do .env.local
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -13,8 +13,20 @@ if (!supabaseAnonKey) {
   throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY não encontrada no arquivo .env.local')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Cliente Supabase otimizado
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false, // Não precisamos de sessão persistente para jogos públicos
+    autoRefreshToken: false, // Não precisamos de refresh automático
+  },
+  global: {
+    headers: {
+      'x-application-name': 'jogaly-games',
+    },
+  },
+})
 
+// Interface completa do jogo
 export interface Game {
   id: string
   title: string
@@ -32,13 +44,45 @@ export interface Game {
   created_at?: string
 }
 
-// Funções para gerenciar jogos
+// Interface otimizada para listagem (menos campos)
+export interface GameListItem {
+  id: string
+  title: string
+  thumb: string
+  likes: number
+  views: number
+  page?: number
+  category?: string
+}
+
+// Cache simples para reduzir requisições desnecessárias
+const cache = new Map<string, { data: GameListItem[], timestamp: number }>()
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
+
+// Função utilitária para cache
+function getCachedData(key: string): GameListItem[] | null {
+  const cached = cache.get(key)
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data
+  }
+  return null
+}
+
+function setCachedData(key: string, data: GameListItem[]): void {
+  cache.set(key, { data, timestamp: Date.now() })
+}
+
+// Funções otimizadas para gerenciar jogos
 export const gameService = {
-  // Buscar todos os jogos da página 1
-  async getAllGames(): Promise<Game[]> {
+  // Buscar todos os jogos da página 1 com cache
+  async getAllGames(): Promise<GameListItem[]> {
+    const cacheKey = 'games_page_1'
+    const cached = getCachedData(cacheKey)
+    if (cached) return cached
+
     const { data, error } = await supabase
       .from('games')
-      .select('*')
+      .select('id,title,thumb,likes,views,page')
       .eq('page', 1)
       .order('created_at', { ascending: false })
     
@@ -47,14 +91,20 @@ export const gameService = {
       throw error
     }
     
-    return data || []
+    const games = (data || []) as GameListItem[]
+    setCachedData(cacheKey, games)
+    return games
   },
 
-  // Buscar jogos por página específica
-  async getGamesByPage(pageNumber: number): Promise<Game[]> {
+  // Buscar jogos por página específica com cache
+  async getGamesByPage(pageNumber: number): Promise<GameListItem[]> {
+    const cacheKey = `games_page_${pageNumber}`
+    const cached = getCachedData(cacheKey)
+    if (cached) return cached
+
     const { data, error } = await supabase
       .from('games')
-      .select('*')
+      .select('id,title,thumb,likes,views,page')
       .eq('page', pageNumber)
       .order('created_at', { ascending: false })
     
@@ -63,10 +113,12 @@ export const gameService = {
       throw error
     }
     
-    return data || []
+    const games = (data || []) as GameListItem[]
+    setCachedData(cacheKey, games)
+    return games
   },
 
-  // Buscar jogo por ID
+  // Buscar jogo por ID (dados completos)
   async getGameById(id: string): Promise<Game | null> {
     const { data, error } = await supabase
       .from('games')
@@ -79,14 +131,14 @@ export const gameService = {
       return null
     }
     
-    return data
+    return data as Game
   },
 
   // Buscar jogos por categoria (apenas página 1)
-  async getGamesByCategory(category: string): Promise<Game[]> {
+  async getGamesByCategory(category: string): Promise<GameListItem[]> {
     const { data, error } = await supabase
       .from('games')
-      .select('*')
+      .select('id,title,thumb,likes,views,category')
       .eq('category', category)
       .eq('page', 1)
       .order('created_at', { ascending: false })
@@ -96,14 +148,14 @@ export const gameService = {
       throw error
     }
     
-    return data || []
+    return (data || []) as GameListItem[]
   },
 
   // Buscar jogos relacionados (5 mais visualizados da página 1, excluindo o jogo atual)
-  async getRelatedGames(gameId: string, category: string, limit: number = 5): Promise<Game[]> {
+  async getRelatedGames(gameId: string, category: string, limit: number = 5): Promise<GameListItem[]> {
     const { data, error } = await supabase
       .from('games')
-      .select('*')
+      .select('id,title,thumb,likes,views')
       .neq('id', gameId)
       .eq('page', 1)
       .limit(limit)
@@ -114,14 +166,14 @@ export const gameService = {
       return []
     }
     
-    return data || []
+    return (data || []) as GameListItem[]
   },
 
   // Pesquisar jogos por título (apenas página 1)
-  async searchGames(query: string): Promise<Game[]> {
+  async searchGames(query: string): Promise<GameListItem[]> {
     const { data, error } = await supabase
       .from('games')
-      .select('*')
+      .select('id,title,thumb,likes,views')
       .ilike('title', `%${query}%`)
       .eq('page', 1)
       .order('created_at', { ascending: false })
@@ -131,44 +183,42 @@ export const gameService = {
       throw error
     }
     
-    return data || []
+    return (data || []) as GameListItem[]
   },
 
-  // Incrementar visualizações do jogo
+  // Incrementar visualizações do jogo (otimizado)
   async incrementViews(gameId: string): Promise<number | null> {
-    console.log('📊 Chamando incrementViews para gameId:', gameId)
-    const { data, error } = await supabase
-      .rpc('increment_game_views', { game_id: gameId })
-    
-    if (error) {
-      console.error('❌ Erro ao incrementar visualizações:', error)
-      return null
-    } else {
-      console.log('✅ RPC executado com sucesso. Novas visualizações:', data)
+    try {
+      const { data, error } = await supabase
+        .rpc('increment_game_views', { game_id: gameId })
+      
+      if (error) throw error
       return data
+    } catch (error) {
+      console.error('Erro ao incrementar visualizações:', error)
+      return null
     }
   },
 
-  // Incrementar curtidas do jogo
+  // Incrementar curtidas do jogo (otimizado)
   async incrementLikes(gameId: string): Promise<number | null> {
-    console.log('❤️ Chamando incrementLikes para gameId:', gameId)
-    const { data, error } = await supabase
-      .rpc('increment_game_likes', { game_id: gameId })
-    
-    if (error) {
-      console.error('❌ Erro ao incrementar curtidas:', error)
-      return null
-    } else {
-      console.log('✅ RPC executado com sucesso. Novas curtidas:', data)
+    try {
+      const { data, error } = await supabase
+        .rpc('increment_game_likes', { game_id: gameId })
+      
+      if (error) throw error
       return data
+    } catch (error) {
+      console.error('Erro ao incrementar curtidas:', error)
+      return null
     }
   },
 
   // Buscar jogos mais visualizados (apenas página 1)
-  async getMostViewedGames(limit: number = 10): Promise<Game[]> {
+  async getMostViewedGames(limit: number = 10): Promise<GameListItem[]> {
     const { data, error } = await supabase
       .from('games')
-      .select('*')
+      .select('id,title,thumb,likes,views')
       .eq('page', 1)
       .order('views', { ascending: false })
       .limit(limit)
@@ -178,6 +228,6 @@ export const gameService = {
       return []
     }
     
-    return data || []
+    return (data || []) as GameListItem[]
   }
 } 

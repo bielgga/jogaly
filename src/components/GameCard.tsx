@@ -2,11 +2,11 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Game } from '@/lib/supabase'
-import { useState } from 'react'
+import { GameListItem } from '@/lib/supabase'
+import { useState, memo, useMemo } from 'react'
 
 interface GameCardProps {
-  game: Game
+  game: GameListItem
   priority?: boolean
 }
 
@@ -35,9 +35,19 @@ function GameCardSkeleton() {
   )
 }
 
-export default function GameCard({ game, priority = false }: GameCardProps) {
+const GameCard = memo(function GameCard({ game, priority = false }: GameCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
+
+  // Memoizar formatação de likes para evitar recálculos
+  const formattedLikes = useMemo(() => {
+    if (game.likes >= 1000000) {
+      return `${(game.likes / 1000000).toFixed(1)}M`
+    } else if (game.likes >= 1000) {
+      return `${(game.likes / 1000).toFixed(1)}k`
+    }
+    return game.likes.toString()
+  }, [game.likes])
 
   if (!game) {
     return <GameCardSkeleton />
@@ -88,13 +98,7 @@ export default function GameCard({ game, priority = false }: GameCardProps) {
         {/* Curtidas - Canto superior direito */}
         <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 shadow-lg">
           <span className="text-red-400">❤️</span>
-          <span>
-            {game.likes >= 1000000 
-              ? `${(game.likes / 1000000).toFixed(1)}M` 
-              : game.likes >= 1000 
-              ? `${(game.likes / 1000).toFixed(1)}k` 
-              : game.likes}
-          </span>
+          <span>{formattedLikes}</span>
         </div>
         
         {/* Título do jogo */}
@@ -109,4 +113,6 @@ export default function GameCard({ game, priority = false }: GameCardProps) {
       </div>
     </Link>
   )
-} 
+})
+
+export default GameCard 
