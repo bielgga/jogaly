@@ -5,6 +5,21 @@ export const metadata: Metadata = {
   title: 'Jogaly Games - Jogos Online Grátis',
   description: 'Jogue os melhores jogos online grátis no estilo Jogaly. Centenas de jogos divertidos para toda a família!',
   keywords: 'jogos online, Jogaly, jogos grátis, games, puzzle, aventura, ação',
+  icons: {
+    icon: [
+      { url: '/favicon_io/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon_io/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon_io/favicon.ico', sizes: 'any' }
+    ],
+    apple: [
+      { url: '/favicon_io/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ],
+    other: [
+      { url: '/favicon_io/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon_io/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' }
+    ]
+  },
+  manifest: '/favicon_io/site.webmanifest'
 }
 
 export default function RootLayout({
@@ -16,6 +31,12 @@ export default function RootLayout({
     <html lang="pt-BR">
       <head>
         <meta name="google-site-verification" content="c_APdrWTSbmgTKrbAuugus_xCUXOclv0pS4n11o17Kc" />
+        <link rel="icon" type="image/x-icon" href="/favicon_io/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon_io/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon_io/favicon-32x32.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon_io/apple-touch-icon.png" />
+        <link rel="manifest" href="/favicon_io/site.webmanifest" />
+        <meta name="theme-color" content="#ffffff" />
       </head>
       <body>{children}</body>
     </html>
