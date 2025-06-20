@@ -8,7 +8,7 @@ export default function Header() {
           <div className="bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold text-4xl shadow-lg transform -rotate-3">
           Jogaly
           </div>
-          <h1 className="text-5xl font-bold text-white">GAMES</h1>
+          <div className="text-5xl font-bold text-white">GAMES</div>
         </div>
       </div>
     </header>

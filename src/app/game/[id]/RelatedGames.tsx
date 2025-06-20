@@ -47,9 +47,9 @@ export default function RelatedGames({ games }: RelatedGamesProps) {
             </div>
             
             <div className="absolute bottom-0 left-0 right-0 p-3">
-              <h3 className="text-white text-sm font-bold leading-tight line-clamp-2">
+              <div className="text-white text-sm font-bold leading-tight line-clamp-2">
                 {relatedGame.title}
-              </h3>
+              </div>
             </div>
           </a>
         ))}
