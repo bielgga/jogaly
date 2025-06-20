@@ -31,6 +31,8 @@ const GameCardSkeleton = memo(function GameCardSkeleton() {
 const GameCard = memo(function GameCard({ game, priority = false }: GameCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  const [videoLoaded, setVideoLoaded] = useState(false)
 
   // Memoizar formatação de likes para evitar recálculos
   const formattedLikes = useMemo(() => {
@@ -42,6 +44,11 @@ const GameCard = memo(function GameCard({ game, priority = false }: GameCardProp
     return game.likes.toString()
   }, [game.likes])
 
+  // Memoizar URL do vídeo
+  const videoUrl = useMemo(() => {
+    return `https://gamemonetize.video/video/${game.gameid}.mp4`
+  }, [game.gameid])
+
   // Callbacks memoizados para evitar re-renders
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true)
@@ -50,6 +57,19 @@ const GameCard = memo(function GameCard({ game, priority = false }: GameCardProp
   const handleImageError = useCallback(() => {
     setImageError(true)
     setImageLoaded(true)
+  }, [])
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true)
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false)
+    setVideoLoaded(false)
+  }, [])
+
+  const handleVideoLoadedData = useCallback(() => {
+    setVideoLoaded(true)
   }, [])
 
   // Memoizar href para evitar re-renders
@@ -64,6 +84,8 @@ const GameCard = memo(function GameCard({ game, priority = false }: GameCardProp
       <article 
         className="group relative h-full w-full rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 overflow-hidden border-[3px] border-white/25"
         aria-label={`Jogar ${game.title}`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {/* Skeleton enquanto carrega */}
         {!imageLoaded && !imageError && (
@@ -71,7 +93,7 @@ const GameCard = memo(function GameCard({ game, priority = false }: GameCardProp
         )}
 
         {/* Imagem de fundo ocupando todo o card */}
-        <div className="absolute inset-0">
+        <div className={`absolute inset-0 transition-opacity duration-300 ${isHovered && videoLoaded ? 'opacity-0' : 'opacity-100'}`}>
           <Image
             src={game.thumb}
             alt={game.title}
@@ -95,6 +117,22 @@ const GameCard = memo(function GameCard({ game, priority = false }: GameCardProp
             </div>
           )}
         </div>
+
+        {/* Vídeo que aparece no hover */}
+        {isHovered && (
+          <div className={`absolute inset-0 transition-opacity duration-300 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}>
+            <video
+              src={videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+              onLoadedData={handleVideoLoadedData}
+              onError={() => setVideoLoaded(false)}
+            />
+          </div>
+        )}
 
         {/* Overlay gradiente para o título */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />

@@ -46,6 +46,7 @@ export interface Game {
   views: number
   likes: number
   page: number
+  gameid: string
   created_at?: string
 }
 
@@ -58,6 +59,7 @@ export interface GameListItem {
   views: number
   page?: number
   category?: string
+  gameid: string
 }
 
 // Cache otimizado com Map para melhor performance
@@ -95,7 +97,7 @@ export const gameService = {
 
     const { data, error } = await supabase
       .from('games')
-      .select('id,title,thumb,likes,views,page')
+      .select('id,title,thumb,likes,views,page,gameid')
       .eq('page', 1)
       .order('created_at', { ascending: false })
     
@@ -117,7 +119,7 @@ export const gameService = {
 
     const { data, error } = await supabase
       .from('games')
-      .select('id,title,thumb,likes,views,page')
+      .select('id,title,thumb,likes,views,page,gameid')
       .eq('page', pageNumber)
       .order('created_at', { ascending: false })
     
@@ -155,7 +157,7 @@ export const gameService = {
 
     const { data, error } = await supabase
       .from('games')
-      .select('id,title,thumb,likes,views,category')
+      .select('id,title,thumb,likes,views,category,gameid')
       .eq('category', category)
       .eq('page', 1)
       .order('created_at', { ascending: false })
@@ -174,7 +176,7 @@ export const gameService = {
   async getRelatedGames(gameId: string, category: string, limit: number = 5): Promise<GameListItem[]> {
     const { data, error } = await supabase
       .from('games')
-      .select('id,title,thumb,likes,views')
+      .select('id,title,thumb,likes,views,gameid')
       .neq('id', gameId)
       .eq('page', 1)
       .limit(limit)
@@ -194,7 +196,7 @@ export const gameService = {
     
     const { data, error } = await supabase
       .from('games')
-      .select('id,title,thumb,likes,views')
+      .select('id,title,thumb,likes,views,gameid')
       .ilike('title', `%${query}%`)
       .eq('page', 1)
       .order('created_at', { ascending: false })
@@ -244,7 +246,7 @@ export const gameService = {
 
     const { data, error } = await supabase
       .from('games')
-      .select('id,title,thumb,likes,views')
+      .select('id,title,thumb,likes,views,gameid')
       .eq('page', 1)
       .order('views', { ascending: false })
       .limit(limit)
@@ -267,7 +269,7 @@ export const gameService = {
 
     const { data, error } = await supabase
       .from('games')
-      .select('id,title,thumb,likes,views,page')
+      .select('id,title,thumb,likes,views,page,gameid')
       .order('created_at', { ascending: false })
     
     if (error) {
