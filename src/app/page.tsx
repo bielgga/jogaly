@@ -2,6 +2,7 @@
 
 import { useState, useEffect, lazy, Suspense, useMemo, useCallback, memo } from 'react'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { gameService, GameListItem } from '@/lib/supabase'
 import GameCard from '@/components/GameCard'
 import Header from '@/components/Header'
@@ -246,11 +247,15 @@ export default function Home() {
       <div className="text-center">
         {/* Logo com animação */}
         <div className="mb-8">
-          <div className="inline-flex items-center space-x-3">
-            <div className="bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold text-4xl shadow-lg animate-bounce" style={{ transform: 'rotate(-5deg)' }}>
-              Jogaly
-            </div>
-            <span className="text-5xl font-bold text-white animate-pulse">GAMES</span>
+          <div className="animate-bounce">
+            <Image
+              src="/logojogaly2.png"
+              alt="Carregando Jogaly Games"
+              width={400}
+              height={120}
+              className="h-32 w-auto"
+              priority
+            />
           </div>
         </div>
         
@@ -295,7 +300,7 @@ export default function Home() {
     <div className="min-h-screen">
       <Header />
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Título principal da página - visualmente oculto mas semanticamente correto */}
         <h1 className="sr-only">Jogos Online Grátis - Jogaly Games</h1>
         

@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         creator: '@Jogalygames',
       },
       alternates: {
-        canonical: `/game/${game.id}`,
+        canonical: `/jogar/${game.id}`,
       },
       other: {
         'game:category': game.category,

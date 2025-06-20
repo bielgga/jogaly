@@ -1,6 +1,7 @@
 'use client'
 
 import { memo } from 'react'
+import Image from 'next/image'
 
 interface SectionSkeletonProps {
   title: string
@@ -24,13 +25,21 @@ const SectionSkeleton = memo(function SectionSkeleton({
   
   return (
     <section className="mt-16" aria-label={`Carregando ${title}`}>
-      {/* Título skeleton */}
+      {/* Logo skeleton com animação */}
       <div className="relative mb-12">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-full h-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent opacity-50"></div>
         </div>
         <div className="relative flex justify-center">
-          <div className="bg-gray-300 animate-pulse px-8 py-4 rounded-2xl h-16 w-80"></div>
+          <div className="animate-pulse">
+            <Image
+              src="/logojogaly2.png"
+              alt="Carregando Jogaly Games"
+              width={200}
+              height={60}
+              className="h-12 w-auto opacity-50"
+            />
+          </div>
         </div>
       </div>
       

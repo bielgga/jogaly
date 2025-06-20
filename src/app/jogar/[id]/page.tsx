@@ -79,11 +79,15 @@ export default function GamePage() {
         <div className="text-center">
           {/* Logo com animação */}
           <div className="mb-8">
-            <div className="inline-flex items-center space-x-2">
-              <div className="bg-yellow-400 text-black px-6 py-3 rounded-xl font-bold text-2xl shadow-lg animate-bounce" style={{ transform: 'rotate(-5deg)' }}>
-                Jogaly
-              </div>
-              <span className="text-2xl font-bold text-white animate-pulse">GAMES</span>
+            <div className="animate-bounce">
+              <Image
+                src="/logojogaly2.png"
+                alt="Carregando Jogaly Games"
+                width={300}
+                height={90}
+                className="h-24 w-auto"
+                priority
+              />
             </div>
           </div>
           
@@ -121,7 +125,7 @@ export default function GamePage() {
     <div className="min-h-screen">
       {/* Header simplificado inline */}
       <header className="py-6">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-4 pt-2 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Botão Home - Ícone de casinha */}
             <button
@@ -148,11 +152,15 @@ export default function GamePage() {
             </button>
 
             {/* Logo Central */}
-            <div className="flex items-center space-x-3">
-              <div className="bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold text-4xl shadow-lg" style={{ transform: 'rotate(-5deg)' }}>
-                Jogaly
-              </div>
-              <div className="text-5xl font-bold text-white">GAMES</div>
+            <div className="flex items-center">
+              <Image
+                src="/logojogaly2.png"
+                alt="Jogaly Games"
+                width={300}
+                height={90}
+                className="h-24 w-auto"
+                priority
+              />
             </div>
 
             {/* Espaço vazio para equilibrar o layout */}
@@ -161,7 +169,7 @@ export default function GamePage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="container mx-auto px-4 pt-2 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Área principal do jogo - Esquerda (3 colunas) */}
           <div className="lg:col-span-3 space-y-6">
@@ -246,7 +254,7 @@ export default function GamePage() {
                     {mostViewedGames.map((mostViewedGame, index) => (
                       <a
                         key={mostViewedGame.id}
-                        href={`/game/${mostViewedGame.id}`}
+                        href={`/jogar/${mostViewedGame.id}`}
                         className="group flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-200 cursor-pointer border border-white/10 hover:border-white/20 hover:shadow-lg backdrop-blur-sm"
                       >
                         {/* Posição */}
@@ -318,7 +326,7 @@ export default function GamePage() {
                     {allGames.map((gameItem) => (
                       <a
                         key={gameItem.id}
-                        href={`/game/${gameItem.id}`}
+                        href={`/jogar/${gameItem.id}`}
                         className="group relative aspect-square rounded-lg overflow-hidden border border-white/20 hover:border-white/40 transition-all duration-200 cursor-pointer hover:scale-105"
                         title={gameItem.title}
                       >
@@ -358,7 +366,7 @@ export default function GamePage() {
                 {moreGames.map((gameItem) => (
                   <a
                     key={gameItem.id}
-                    href={`/game/${gameItem.id}`}
+                    href={`/jogar/${gameItem.id}`}
                     className="group relative aspect-square rounded-lg overflow-hidden border border-white/20 hover:border-white/40 transition-all duration-200 cursor-pointer hover:scale-105"
                     title={gameItem.title}
                   >

@@ -22,7 +22,7 @@ export default function RelatedGames({ games }: RelatedGamesProps) {
         {games.map((relatedGame) => (
           <a
             key={relatedGame.id}
-            href={`/game/${relatedGame.id}`}
+            href={`/jogar/${relatedGame.id}`}
             className="group relative aspect-square rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 overflow-hidden border-[3px] border-white/25"
           >
             <Image
