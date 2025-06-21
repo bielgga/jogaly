@@ -47,6 +47,13 @@ export default function RootLayout({
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
               gtag('config', 'AW-17241419163');
+              
+              // Event snippet for Visualização de página conversion page
+              gtag('event', 'conversion', {
+                  'send_to': 'AW-17241419163/y5jWCITAvN8aEJvbrJ1A',
+                  'value': 1.0,
+                  'currency': 'BRL'
+              });
             `,
           }}
         />
