@@ -85,7 +85,7 @@ export default function TermosDeUsoPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-white mb-4">7. Limitação de Responsabilidade</h2>
               <p className="text-gray-300 leading-relaxed mb-4">
-                O Jogaly é fornecido "como está" sem garantias de qualquer tipo. Não nos responsabilizamos por danos diretos, indiretos, incidentais ou consequenciais resultantes do uso ou incapacidade de usar nosso site.
+                O Jogaly é fornecido &quot;como está&quot; sem garantias de qualquer tipo. Não nos responsabilizamos por danos diretos, indiretos, incidentais ou consequenciais resultantes do uso ou incapacidade de usar nosso site.
               </p>
             </section>
 
