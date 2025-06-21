@@ -1,5 +1,16 @@
 import { gameService } from '@/lib/supabase'
 
+// Lista de categorias disponíveis
+const CATEGORIES = [
+  'corrida',
+  'cozinhar', 
+  'esportes',
+  'io',
+  'multiplayer',
+  'quebra-cabeca',
+  'tiro'
+]
+
 export async function GET() {
   try {
     // Buscar todos os jogos de todas as páginas
@@ -20,6 +31,20 @@ export async function GET() {
         changefreq: 'daily',
         priority: '1.0'
       },
+      // Página principal de categorias
+      {
+        url: `${baseUrl}/categoria`,
+        lastmod: currentDate,
+        changefreq: 'weekly',
+        priority: '0.9'
+      },
+      // Páginas de categorias específicas
+      ...CATEGORIES.map(category => ({
+        url: `${baseUrl}/categoria/${category}`,
+        lastmod: currentDate,
+        changefreq: 'weekly',
+        priority: '0.9'
+      })),
       // Páginas de jogos individuais
       ...allGames.map(game => ({
         url: `${baseUrl}/jogar/${game.id}`,
@@ -61,6 +86,18 @@ ${urls.map(({ url, lastmod, changefreq, priority }) => `  <url>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+  <url>
+    <loc>${baseUrl}/categoria</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+${CATEGORIES.map(category => `  <url>
+    <loc>${baseUrl}/categoria/${category}</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>`).join('\n')}
 </urlset>`
 
     return new Response(basicSitemap, {
