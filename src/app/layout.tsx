@@ -37,6 +37,19 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/favicon_io/apple-touch-icon.png" />
         <link rel="manifest" href="/favicon_io/site.webmanifest" />
         <meta name="theme-color" content="#ffffff" />
+        
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17241419163"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-17241419163');
+            `,
+          }}
+        />
       </head>
       <body>{children}</body>
     </html>
