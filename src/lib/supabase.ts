@@ -149,7 +149,7 @@ export const gameService = {
     return data as Game
   },
 
-  // Buscar jogos por categoria (apenas página 1)
+  // Buscar jogos por categoria (todas as páginas)
   async getGamesByCategory(category: string): Promise<GameListItem[]> {
     const cacheKey = `games_category_${category}`
     const cached = getCachedData(cacheKey)
@@ -159,7 +159,6 @@ export const gameService = {
       .from('games')
       .select('id,title,thumb,likes,views,category,gameid')
       .eq('category', category)
-      .eq('page', 1)
       .order('created_at', { ascending: false })
     
     if (error) {

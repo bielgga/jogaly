@@ -3,6 +3,7 @@
 import { useState, useEffect, lazy, Suspense, useMemo, useCallback, memo } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
+import Link from 'next/link'
 import { gameService, GameListItem } from '@/lib/supabase'
 import GameCard from '@/components/GameCard'
 import Header from '@/components/Header'
@@ -106,26 +107,72 @@ const GameSection = memo(({
 
 GameSection.displayName = 'GameSection'
 
+// Componente para Card de Categoria
+const CategoryCard = memo(({ 
+  title, 
+  imageUrl, 
+  href 
+}: {
+  title: string
+  imageUrl: string
+  href: string
+}) => {
+  return (
+    <Link href={href} className="group relative w-full aspect-square rounded-full overflow-hidden cursor-pointer transform transition-all duration-500 hover:scale-110 border-[3px] border-white/20 hover:border-yellow-400/50 shadow-lg hover:shadow-2xl">
+      {/* Imagem de fundo escurecida */}
+      <div className="absolute inset-0">
+        <Image
+          src={imageUrl}
+          alt={title}
+          fill
+          className="object-cover transition-all duration-700 group-hover:scale-110"
+          sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 16vw, 11vw"
+        />
+        {/* Overlay escuro */}
+        <div className="absolute inset-0 bg-black/70 group-hover:bg-black/50 transition-all duration-500"></div>
+      </div>
+      
+      {/* Efeito de partículas */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        {/* Partículas animadas menores para círculos */}
+        <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-yellow-400/80 rounded-full animate-ping"></div>
+        <div className="absolute top-1/3 right-1/3 w-0.5 h-0.5 bg-orange-400/80 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        <div className="absolute bottom-1/3 left-1/3 w-1 h-1 bg-yellow-300/80 rounded-full animate-ping" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-1/2 right-1/4 w-0.5 h-0.5 bg-orange-300/80 rounded-full animate-pulse" style={{animationDelay: '1.5s'}}></div>
+        <div className="absolute bottom-1/4 right-1/2 w-1 h-1 bg-yellow-500/80 rounded-full animate-ping" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-3/4 left-1/2 w-0.5 h-0.5 bg-orange-500/80 rounded-full animate-pulse" style={{animationDelay: '0.3s'}}></div>
+        
+        {/* Efeito de brilho circular */}
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 via-transparent to-orange-400/20 animate-pulse rounded-full"></div>
+      </div>
+      
+      {/* Título da categoria dentro do círculo */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <h3 className="text-white font-bold text-xs sm:text-sm text-center px-2 drop-shadow-2xl group-hover:text-yellow-300 transition-colors duration-300 leading-tight">
+          {title}
+        </h3>
+      </div>
+      
+      {/* Efeito de hover adicional */}
+      <div className="absolute inset-0 border-2 border-transparent group-hover:border-yellow-400/30 rounded-full transition-all duration-300"></div>
+    </Link>
+  )
+})
+
+CategoryCard.displayName = 'CategoryCard'
+
 // Componente principal otimizado
 export default function Home() {
   const [games, setGames] = useState<GameListItem[]>([])
   const [popularGames, setPopularGames] = useState<GameListItem[]>([])
   const [page3Games, setPage3Games] = useState<GameListItem[]>([])
-  const [cookingGames, setCookingGames] = useState<GameListItem[]>([])
-  const [shootingGames, setShootingGames] = useState<GameListItem[]>([])
-  const [racingGames, setRacingGames] = useState<GameListItem[]>([])
-  const [puzzleGames, setPuzzleGames] = useState<GameListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
   // Estados para controlar loading das seções
   const [sectionsLoading, setSectionsLoading] = useState({
     popular: true,
-    page3: true,
-    cooking: true,
-    shooting: true,
-    racing: true,
-    puzzle: true
+    page3: true
   })
 
   // Memoizar jogos filtrados e ordenados
@@ -136,62 +183,19 @@ export default function Home() {
   // Callback memoizado para carregar seções com otimização de performance
   const loadSections = useCallback(async () => {
     try {
-      // Carregar seções em batches para reduzir blocking
-      const loadBatch1 = async () => {
-        const [popularGamesData, page3GamesData] = await Promise.all([
-          gameService.getGamesByPage(2),
-          gameService.getGamesByPage(3),
-        ])
-        
-        setPopularGames(popularGamesData.sort((a, b) => b.likes - a.likes))
-        setPage3Games(page3GamesData.sort((a, b) => b.likes - a.likes))
-        setSectionsLoading(prev => ({ ...prev, popular: false, page3: false }))
-      }
-
-      const loadBatch2 = async () => {
-        const [shootingGamesData, racingGamesData] = await Promise.all([
-          gameService.getGamesByPage(5),
-          gameService.getGamesByPage(6),
-        ])
-        
-        setShootingGames(shootingGamesData.sort((a, b) => b.likes - a.likes))
-        setRacingGames(racingGamesData.sort((a, b) => b.likes - a.likes))
-        setSectionsLoading(prev => ({ ...prev, shooting: false, racing: false }))
-      }
-
-      const loadBatch3 = async () => {
-        const [cookingGamesData, puzzleGamesData] = await Promise.all([
-          gameService.getGamesByPage(4),
-          gameService.getGamesByPage(7),
-        ])
-        
-        setCookingGames(cookingGamesData.sort((a, b) => b.likes - a.likes))
-        setPuzzleGames(puzzleGamesData.sort((a, b) => b.likes - a.likes))
-        setSectionsLoading(prev => ({ ...prev, cooking: false, puzzle: false }))
-      }
-
-      // Executar batches com delays para otimizar performance
-      await loadBatch1()
+      // Carregar seções restantes
+      const [popularGamesData, page3GamesData] = await Promise.all([
+        gameService.getGamesByPage(2),
+        gameService.getGamesByPage(3),
+      ])
       
-      // Usar requestIdleCallback para as próximas seções
-      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        window.requestIdleCallback(() => loadBatch2(), { timeout: 3000 })
-        window.requestIdleCallback(() => loadBatch3(), { timeout: 5000 })
-      } else {
-        setTimeout(loadBatch2, 100)
-        setTimeout(loadBatch3, 200)
-      }
+      setPopularGames(popularGamesData.sort((a, b) => b.likes - a.likes))
+      setPage3Games(page3GamesData.sort((a, b) => b.likes - a.likes))
+      setSectionsLoading({ popular: false, page3: false })
       
     } catch (err) {
       console.error('Erro ao carregar seções adicionais:', err)
-      setSectionsLoading({
-        popular: false,
-        page3: false,
-        cooking: false,
-        shooting: false,
-        racing: false,
-        puzzle: false
-      })
+      setSectionsLoading({ popular: false, page3: false })
     }
   }, [])
 
@@ -347,152 +351,60 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Seção de Categorias - Posição original com layout novo */}
+        <section className="mb-16" aria-labelledby="categories-heading">
+          <h2 id="categories-heading" className="sr-only">Categorias de Jogos</h2>
+          
+          {/* Grid de Categorias - Maiores */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-6">
+            <CategoryCard
+              title="Jogos de Tiro"
+              imageUrl="https://img.gamemonetize.com//z3ns6gvgxik7pb9l1jhfvvkg964ewpxl//512x384.jpg"
+              href="/categoria/tiro"
+            />
+            <CategoryCard
+              title="Jogos de Corrida"
+              imageUrl="https://img.gamemonetize.com/whsoq6n1ply6s1k4lbjfnwaozsjb26t5/512x384.jpg"
+              href="/categoria/corrida"
+            />
+            <CategoryCard
+              title="Quebra-Cabeças"
+              imageUrl="https://img.gamemonetize.com//5pqlhiolbr13mi1heq05z1rkzfv8jw8y//512x384.jpg"
+              href="/categoria/quebra-cabeca"
+            />
+            <CategoryCard
+              title="Jogos de Cozinhar"
+              imageUrl="https://img.gamemonetize.com//w4fz652t1x5kge5l4xztnw4hq7sbnu1x//512x384.jpg"
+              href="/categoria/cozinhar"
+            />
+            <CategoryCard
+              title="Multiplayer"
+              imageUrl="https://img.gamemonetize.com//458lt7ogtg7d3yoscko40xjq0cykodr6//512x384.jpg"
+              href="/categoria/multiplayer"
+            />
+            <CategoryCard
+              title=".io"
+              imageUrl="https://img.gamemonetize.com/avdfpa7rynma1wxofv7mfg6iyh8trf07/512x384.jpg"
+              href="/categoria/io"
+            />
+            <CategoryCard
+              title="Esportes"
+              imageUrl="https://img.gamemonetize.com//mvrcuqg8nkwbydhr8tspp4dhnedxn93q//512x384.jpg"
+              href="/categoria/esportes"
+            />
+          </div>
+        </section>
+
         {/* Seção Jogos Mais Populares - Página 2 */}
-        {sectionsLoading.popular ? (
-          <SectionSkeleton 
-            title="Jogos Mais Populares" 
-            emoji="🔥"
-            gridCols={{ mobile: 2, tablet: 6, desktop: 6 }}
-            itemCount={23}
-          />
-        ) : popularGames.length > 0 && (
-          <section aria-labelledby="popular-games-heading">
-            <div className="mt-16">
-              {/* Título com efeito especial */}
-              <div className="relative mb-12">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-full h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-50"></div>
-                </div>
-                <div className="relative flex justify-center">
-                  <h2 id="popular-games-heading" className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-8 py-4 rounded-2xl font-bold text-3xl shadow-2xl hover:rotate-0 transition-transform duration-300">
-                    <span className="mr-3">🔥</span>
-                    Jogos Mais Populares
-                    <span className="ml-3">🔥</span>
-                  </h2>
-                </div>
-              </div>
-              
-              {/* Layout Criativo: 3 Colunas Perfeitas */}
-              <div className="w-full">
-                {/* Mobile: Layout simples */}
-                <div className="grid grid-cols-2 gap-4 sm:hidden">
-                  {popularGames.slice(0, 8).map((game, index) => (
-                    <div key={`popular-${game.id}`} className="aspect-square">
-                      <GameCard game={game} priority={index < 4} />
-                    </div>
-                  ))}
-                </div>
+        <GameSection
+          games={popularGames}
+          title="Jogos Mais Populares"
+          emoji="🔥"
+          sectionId="popular"
+          loading={sectionsLoading.popular}
+          rotation={2}
+        />
 
-                {/* Tablet e Desktop: Layout 3 colunas bem distribuído */}
-                <div className="hidden sm:grid grid-cols-6 gap-4 w-full">
-                  {/* LINHA 1 */}
-                  {/* Horizontal - Coluna 1 */}
-                  <div className="col-span-2 aspect-[2.1/1]">
-                    <GameCard game={popularGames[0]} priority={true} />
-                  </div>
-                  {/* Quadrado - Coluna 2 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[1]} priority={true} />
-                  </div>
-                  {/* Quadrado - Coluna 2 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[2]} priority={true} />
-                  </div>
-                  {/* Vertical - Coluna 3 (ocupa 2 linhas) */}
-                  <div className="col-span-1 row-span-2 aspect-[1/2.1]">
-                    <GameCard game={popularGames[3]} priority={true} />
-                  </div>
-                  {/* Quadrado - Coluna 3 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[4]} priority={true} />
-                  </div>
-
-                  {/* LINHA 2 */}
-                  {/* Quadrado - Coluna 1 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[5]} priority={true} />
-                  </div>
-                  {/* Quadrado - Coluna 1 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[6]} />
-                  </div>
-                  {/* Horizontal - Coluna 2 */}
-                  <div className="col-span-2 aspect-[2.1/1]">
-                    <GameCard game={popularGames[7]} />
-                  </div>
-                  {/* Quadrado - Coluna 3 (complemento do vertical da linha 1) */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[8]} />
-                  </div>
-
-                  {/* LINHA 3 */}
-                  {/* Vertical - Coluna 1 (ocupa 2 linhas) */}
-                  <div className="col-span-1 row-span-2 aspect-[1/2.1]">
-                    <GameCard game={popularGames[9]} />
-                  </div>
-                  {/* Quadrado - Coluna 1 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[10]} />
-                  </div>
-                  {/* Quadrado - Coluna 2 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[11]} />
-                  </div>
-                  {/* Quadrado - Coluna 2 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[12]} />
-                  </div>
-                  {/* Horizontal - Coluna 3 */}
-                  <div className="col-span-2 aspect-[2.1/1]">
-                    <GameCard game={popularGames[13]} />
-                  </div>
-
-                  {/* LINHA 4 */}
-                  {/* Quadrado - Coluna 1 (complemento do vertical da linha 3) */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[14]} />
-                  </div>
-                  {/* Vertical - Coluna 2 (ocupa 2 linhas) */}
-                  <div className="col-span-1 row-span-2 aspect-[1/2.1]">
-                    <GameCard game={popularGames[15]} />
-                  </div>
-                  {/* Quadrado - Coluna 2 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[16]} />
-                  </div>
-                  {/* Quadrado - Coluna 3 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[17]} />
-                  </div>
-                  {/* Quadrado - Coluna 3 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[18]} />
-                  </div>
-
-                  {/* LINHA 5 */}
-                  {/* Horizontal - Coluna 1 */}
-                  <div className="col-span-2 aspect-[2.1/1]">
-                    <GameCard game={popularGames[19]} />
-                  </div>
-                  {/* Quadrado - Coluna 2 (complemento do vertical da linha 4) */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[20]} />
-                  </div>
-                  {/* Quadrado - Coluna 3 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[21]} />
-                  </div>
-                  {/* Quadrado - Coluna 3 */}
-                  <div className="col-span-1 aspect-square">
-                    <GameCard game={popularGames[22]} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Usar componentes memoizados para as outras seções */}
         <GameSection
           games={page3Games}
           title="Escolhas do Jogaly"
@@ -500,41 +412,6 @@ export default function Home() {
           sectionId="page3"
           loading={sectionsLoading.page3}
           rotation={-2}
-        />
-
-        <GameSection
-          games={shootingGames}
-          title="Jogos de Tiroteiro"
-          emoji="🎯"
-          sectionId="shooting"
-          loading={sectionsLoading.shooting}
-          rotation={2}
-        />
-
-        <GameSection
-          games={racingGames}
-          title="Jogos de Corrida"
-          emoji="🏎️"
-          sectionId="racing"
-          loading={sectionsLoading.racing}
-          rotation={-2}
-        />
-
-        <GameSection
-          games={puzzleGames}
-          title="Jogos de Quebra-Cabeça"
-          emoji="🧩"
-          sectionId="puzzle"
-          loading={sectionsLoading.puzzle}
-          rotation={2}
-        />
-
-        <GameSection
-          games={cookingGames}
-          title="Jogos de Cozinhar"
-          emoji="👨‍🍳"
-          sectionId="cooking"
-          loading={sectionsLoading.cooking}
         />
       </main>
       
