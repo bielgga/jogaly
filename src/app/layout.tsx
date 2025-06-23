@@ -19,7 +19,20 @@ export const metadata: Metadata = {
       { url: '/favicon_io/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' }
     ]
   },
-  manifest: '/favicon_io/site.webmanifest'
+  manifest: '/favicon_io/site.webmanifest',
+  openGraph: {
+    title: 'Jogaly - Jogos Online Grátis',
+    description: 'Jogue os melhores jogos online grátis no estilo Jogaly. Centenas de jogos divertidos para toda a família!',
+    images: [{
+      url: '/apple-touch-icon',
+      width: 400,
+      height: 120,
+      alt: 'Jogaly - Logo'
+    }],
+    type: 'website',
+    siteName: 'Jogaly',
+    locale: 'pt_BR',
+  }
 }
 
 export default function RootLayout({
@@ -27,6 +40,51 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://jogaly.com'
+  
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Jogaly',
+    description: 'Jogos online grátis para toda a família',
+    url: baseUrl,
+    logo: {
+      '@type': 'ImageObject',
+      url: `${baseUrl}/logojogaly2.png`,
+      width: 400,
+      height: 120
+    },
+    sameAs: [
+      // Adicione aqui suas redes sociais quando tiver
+    ]
+  }
+
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Jogaly',
+    description: 'Jogos online grátis para toda a família',
+    url: baseUrl,
+    publisher: {
+      '@type': 'Organization',
+      name: 'Jogaly',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${baseUrl}/logojogaly2.png`,
+        width: 400,
+        height: 120
+      }
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${baseUrl}/jogar/{search_term_string}`
+      },
+      'query-input': 'required name=search_term_string'
+    }
+  }
+
   return (
     <html lang="pt-BR">
       <head>
@@ -37,6 +95,22 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/favicon_io/apple-touch-icon.png" />
         <link rel="manifest" href="/favicon_io/site.webmanifest" />
         <meta name="theme-color" content="#ffffff" />
+        
+        {/* Dados estruturados da organização */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
+        />
+        
+        {/* Dados estruturados do website */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd),
+          }}
+        />
         
         {/* Google tag (gtag.js) */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17241419163"></script>
