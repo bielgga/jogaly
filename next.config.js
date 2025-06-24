@@ -106,6 +106,16 @@ const nextConfig = {
 
     return config
   },
+  // Redirecionamentos 301
+  async redirects() {
+    return [
+      {
+        source: '/game/:path*',
+        destination: '/jogar/:path*',
+        permanent: true, // 301 redirect
+      },
+    ]
+  },
   // Output otimizado
   output: 'standalone',
   // Configurações de performance

@@ -121,6 +121,7 @@ export default function RootLayout({
         />
         
         {/* Google tag (gtag.js) */}
+        
         <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17241419163"></script>
         <script
           dangerouslySetInnerHTML={{
