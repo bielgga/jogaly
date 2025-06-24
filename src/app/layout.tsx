@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     title: 'Jogaly - Jogos Online Grátis',
     description: 'Jogue os melhores jogos online grátis no estilo Jogaly. Centenas de jogos divertidos para toda a família!',
     images: [{
-      url: '/apple-touch-icon',
+      url: 'https://jogaly.com/logojogaly2.png',
       width: 400,
       height: 120,
       alt: 'Jogaly - Logo'
@@ -95,6 +95,14 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/favicon_io/apple-touch-icon.png" />
         <link rel="manifest" href="/favicon_io/site.webmanifest" />
         <meta name="theme-color" content="#ffffff" />
+        
+        {/* Meta tags para o Google */}
+        <meta property="og:image" content="https://jogaly.com/logojogaly2.png" />
+        <meta property="og:image:width" content="400" />
+        <meta property="og:image:height" content="120" />
+        <meta property="og:image:alt" content="Jogaly - Jogos Online Grátis" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://jogaly.com/logojogaly2.png" />
         
         {/* Dados estruturados da organização */}
         <script
