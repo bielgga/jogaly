@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     description: 'Jogue os melhores jogos online grátis no estilo Jogaly. Centenas de jogos divertidos para toda a família!',
     url: 'https://jogaly.com',
     images: [{
-      url: 'https://jogaly.com/android-chrome-192x192',
+      url: 'https://jogaly.com/favicon_io/logo.png',
       width: 400,
       height: 120,
       alt: 'Jogaly - Logo'
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Jogaly - Jogos Online Grátis',
     description: 'Jogue os melhores jogos online grátis no estilo Jogaly. Centenas de jogos divertidos para toda a família!',
-    images: ['https://jogaly.com/android-chrome-192x192'],
+    images: ['https://jogaly.com/favicon_io/logo.png'],
   }
 }
 
@@ -57,7 +57,7 @@ export default function RootLayout({
     url: baseUrl,
     logo: {
       '@type': 'ImageObject',
-      url: `${baseUrl}/android-chrome-192x192`,
+      url: `${baseUrl}/favicon_io/logo.png`,
       width: 400,
       height: 120
     },
@@ -77,9 +77,9 @@ export default function RootLayout({
       name: 'Jogaly',
       logo: {
         '@type': 'ImageObject',
-        url: `${baseUrl}/android-chrome-192x192`,
-        width: 400,
-        height: 120
+        url: `${baseUrl}/favicon_io/android-chrome-512x512.png`,
+        width: 512,
+        height: 512
       }
     },
     potentialAction: {
@@ -104,23 +104,21 @@ export default function RootLayout({
         <meta name="theme-color" content="#ffffff" />
         
         {/* Meta tags para o Google */}
-        <meta property="og:image" content="https://jogaly.com/android-chrome-192x192" />
-        <meta property="og:image:width" content="400" />
-        <meta property="og:image:height" content="120" />
+        <meta property="og:image" content="https://jogaly.com/favicon_io/android-chrome-512x512.png" />
+        <meta property="og:image:width" content="512" />
+        <meta property="og:image:height" content="512" />
         <meta property="og:image:alt" content="Jogaly - Jogos Online Grátis" />
-        <meta property="og:logo" content="https://jogaly.com/android-chrome-192x192" />
         
         {/* Twitter Cards */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Jogaly - Jogos Online Grátis" />
         <meta name="twitter:description" content="Jogue os melhores jogos online grátis no estilo Jogaly. Centenas de jogos divertidos para toda a família!" />
-        <meta name="twitter:image" content="https://jogaly.com/android-chrome-192x192" />
+        <meta name="twitter:image" content="https://jogaly.com/favicon_io/android-chrome-512x512.png" />
         <meta name="twitter:image:alt" content="Jogaly - Logo" />
         
         {/* Meta tags adicionais para SEO */}
-        <meta name="image" content="https://jogaly.com/android-chrome-192x192" />
-        <meta name="logo" content="https://jogaly.com/android-chrome-192x192" />
-        <link rel="image_src" href="https://jogaly.com/android-chrome-192x192" />
+        <meta name="image" content="https://jogaly.com/favicon_io/logo.png" />
+        <link rel="image_src" href="https://jogaly.com/favicon_io/logo.png" />
         
         {/* Dados estruturados da organização */}
         <script
